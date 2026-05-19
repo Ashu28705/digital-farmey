@@ -1,0 +1,279 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 Fertilizer Guide — AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { min-height:100vh; }
+    .page-wrapper { max-width:860px; margin:auto; padding:40px 24px; }
+
+    .page-hero { text-align:center; margin-bottom:36px; }
+    .page-hero .ph-icon {
+      width:72px; height:72px; display:grid; place-items:center;
+      margin:0 auto 12px; border-radius:50%;
+      border:1px solid rgba(34,197,94,0.25);
+      background:rgba(34,197,94,0.08);
+      color:var(--accent-1); font-size:18px; font-weight:800;
+      letter-spacing:1px;
+      box-shadow:0 0 18px rgba(34,197,94,0.08);
+    }
+    .page-hero h1 { font-size:28px; font-weight:800; color:var(--text-primary); }
+    .page-hero p  { font-size:14px; color:var(--text-secondary); margin-top:6px; }
+
+    /* Crop picker */
+    .crop-picker { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
+    .crop-pill {
+      padding:10px 18px; border-radius:30px; cursor:pointer; transition:var(--transition);
+      background:var(--glass-bg); border:1px solid var(--glass-border);
+      font-size:14px; color:var(--text-secondary); font-weight:500;
+      backdrop-filter:blur(12px);
+    }
+    .crop-pill:hover { border-color:rgba(34,197,94,0.3); color:var(--accent-1); transform:translateY(-2px); }
+    .crop-pill.selected { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.5);
+      color:var(--accent-1); box-shadow:0 0 16px rgba(34,197,94,0.15); }
+
+    /* Fertilizer cards */
+    .fert-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:24px; }
+    .fert-card { padding:24px; border-radius:var(--radius-lg); backdrop-filter:blur(16px);
+      background:var(--glass-bg); border:1px solid var(--glass-border); transition:var(--transition); }
+    .fert-card:hover { transform:translateY(-4px); border-color:rgba(34,197,94,0.3); }
+    .fert-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .fert-icon { font-size:32px; }
+    .fert-name { font-size:16px; font-weight:700; color:var(--text-primary); }
+    .fert-formula { font-size:12px; color:var(--text-secondary); font-family:monospace; }
+    .fert-qty  { font-size:28px; font-weight:800; color:var(--accent-1); margin-bottom:4px; }
+    .fert-unit { font-size:12px; color:var(--text-secondary); }
+    .fert-bar  { margin-top:12px; }
+    .fert-tip  { margin-top:12px; font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5;
+      padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); }
+
+    /* Schedule table */
+    .schedule-card { padding:28px; border-radius:var(--radius-lg); backdrop-filter:blur(16px);
+      background:var(--glass-bg); border:1px solid var(--glass-border); margin-bottom:24px; }
+    .schedule-timeline { position:relative; padding-left:24px; }
+    .schedule-timeline::before { content:''; position:absolute; left:0; top:0; bottom:0;
+      width:2px; background:linear-gradient(180deg, var(--accent-1), transparent); }
+    .sch-item { position:relative; padding:16px 0 16px 20px; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .sch-item:last-child { border-bottom:none; }
+    .sch-item::before { content:''; position:absolute; left:-5px; top:50%; transform:translateY(-50%);
+      width:12px; height:12px; border-radius:50%; background:var(--accent-2);
+      border:2px solid var(--bg-darkest); }
+    .sch-week  { font-size:12px; color:var(--text-secondary); margin-bottom:4px; }
+    .sch-title { font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px; }
+    .sch-detail{ font-size:13px; color:var(--text-secondary); }
+
+    /* Dosage calculator */
+    .calc-section { padding:28px; border-radius:var(--radius-lg); backdrop-filter:blur(16px);
+      background:var(--glass-bg); border:1px solid var(--glass-border); margin-bottom:24px; }
+    .calc-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .calc-result { padding:20px; border-radius:var(--radius-md); margin-top:16px;
+      background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2);
+      animation:fadeInUp 0.4s ease; display:none; }
+    .calc-result.show { display:block; }
+    .calc-res-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px; }
+    .calc-res-item { text-align:center; }
+    .calc-res-val { font-size:22px; font-weight:800; color:var(--accent-1); }
+    .calc-res-lbl { font-size:11px; color:var(--text-secondary); }
+
+    .brand-mark {
+      width:36px; height:36px; border-radius:12px;
+      display:grid; place-items:center;
+      background:rgba(34,197,94,0.12);
+      border:1px solid rgba(34,197,94,0.25);
+      color:var(--accent-1);
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:0.5px;
+      flex-shrink:0;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+      <div class="bg-animated"></div>
+  <div class="particles" id="particles"></div>
+
+  <header class="site-header">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">AG</span>
+      <div>
+        <div class="brand-name">AgriAdvisor</div>
+        <div class="brand-sub">Fertilizer Guide</div>
+      </div>
+    </a>
+    <nav>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="page-wrapper">
+    <div class="page-hero anim-fade-up">
+      <span class="ph-icon">NPK</span>
+      <h1>Fertilizer Recommendation Guide</h1>
+      <p>Precise NPK dosage and application schedule tailored to your crop</p>
+    </div>
+
+    <!-- Crop Selector -->
+    <div class="anim-fade-up delay-1">
+      <div class="section-title">Select Your Crop</div>
+      <p class="section-subtitle">Choose to see the exact fertilizer plan</p>
+      <div class="crop-picker" id="cropPicker">
+        <div class="crop-pill selected" onclick="selectCrop(this,'wheat')">Wheat</div>
+        <div class="crop-pill" onclick="selectCrop(this,'rice')">Rice</div>
+        <div class="crop-pill" onclick="selectCrop(this,'maize')">Maize</div>
+        <div class="crop-pill" onclick="selectCrop(this,'cotton')">Cotton</div>
+        <div class="crop-pill" onclick="selectCrop(this,'mustard')">Mustard</div>
+        <div class="crop-pill" onclick="selectCrop(this,'soybean')">Soybean</div>
+        <div class="crop-pill" onclick="selectCrop(this,'sugarcane')">Sugarcane</div>
+      </div>
+    </div>
+
+    <!-- Fertilizer Cards -->
+    <div class="fert-grid anim-fade-up delay-2" id="fertGrid"></div>
+
+    <!-- Application Schedule -->
+    <div class="schedule-card anim-fade-up delay-3">
+      <div class="section-title">Application Schedule</div>
+      <p class="section-subtitle" id="schedSubtitle"></p>
+      <div class="schedule-timeline" id="scheduleTimeline"></div>
+    </div>
+
+    <!-- Dosage Calculator -->
+    <div class="calc-section anim-fade-up delay-4">
+      <div class="section-title">Farm Area Dosage Calculator</div>
+      <p class="section-subtitle">Calculate total fertilizer needed for your farm size</p>
+      <div class="calc-row">
+        <div class="form-group">
+          <label class="form-label">Farm Area</label>
+          <input type="number" class="form-input" id="farmArea" placeholder="e.g. 5" value="5" min="0.1" step="0.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit</label>
+          <select class="form-select" id="areaUnit">
+            <option value="hectare">Hectares</option>
+            <option value="acre">Acres</option>
+            <option value="bigha">Bigha</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calculate()">Calculate Total Dose</button>
+      <div class="calc-result" id="calcResult"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="crop-recommendation.html" class="btn btn-secondary">Crop Advice</a>
+      <a href="market-prices.html" class="btn btn-secondary">Market Prices</a>
+      <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+    </div>
+  </div>
+
+  <script>
+    const pc=document.getElementById('particles');
+    for(let i=0;i<12;i++){
+      const p=document.createElement('div'); p.className='particle';
+      const s=Math.random()*5+2;
+      p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*12}s;`;
+      pc.appendChild(p);
+    }
+
+    const fertData = {
+      wheat:   {urea:50,dap:40,potash:30,gypsum:20,zinc:10,schedule:[{w:'Week 0 (Pre-Sowing)',t:'Basal Application',d:'Apply full DAP (40 kg/ha) + Potash (30 kg/ha) + Zinc Sulphate (10 kg/ha) during tillage.'},{w:'Week 3-4 (CRI Stage)',t:'1st Top Dressing',d:'Apply half dose of Urea (25 kg/ha). Irrigate within 24 hours.'},{w:'Week 8-9 (Jointing)',t:'2nd Top Dressing',d:'Apply remaining Urea (25 kg/ha). Avoid late nitrogen application.'}]},
+      rice:    {urea:60,dap:35,potash:25,gypsum:25,zinc:15,schedule:[{w:'Week 0 (Transplanting)',t:'Basal Application',d:'Apply DAP (35 kg/ha) + Potash (25 kg/ha) at transplanting time.'},{w:'Week 3 (Early Stage)',t:'Nitrogen Top Dress',d:'Apply one-third Urea (20 kg/ha) when crop is established.'},{w:'Week 7 (Panicle)',t:'Final Top Dressing',d:'Apply two-thirds Urea (40 kg/ha) before panicle initiation for best grain fill.'}]},
+      maize:   {urea:55,dap:45,potash:35,gypsum:15,zinc:12,schedule:[{w:'Week 0 (Sowing)',t:'Basal Application',d:'Apply full DAP (45 kg/ha) + half Potash (17 kg/ha) in furrows at sowing.'},{w:'Week 4 (V4 Stage)',t:'1st Top Dressing',d:'Apply half Urea (27 kg/ha) + remaining Potash (18 kg/ha).'},{w:'Week 7 (Tasseling)',t:'Final Application',d:'Apply remaining Urea (28 kg/ha) at tasseling for high yield.'}]},
+      cotton:  {urea:65,dap:50,potash:40,gypsum:30,zinc:10,schedule:[{w:'Week 0 (Pre-Sowing)',t:'Land Preparation',d:'Apply Gypsum (30 kg/ha) + DAP (50 kg/ha) + half Potash (20 kg/ha).'},{w:'Week 6 (Squaring)',t:'1st Split Dose',d:'Apply one-third Urea (22 kg/ha) + remaining Potash at square initiation.'},{w:'Week 12 (Boll Stage)',t:'Final Dose',d:'Apply remaining Urea for boll development and fiber quality.'}]},
+      mustard: {urea:35,dap:25,potash:20,gypsum:20,zinc:8,schedule:[{w:'Week 0 (Sowing)',t:'Basal Application',d:'Apply DAP (25 kg/ha) + Potash (20 kg/ha) + Gypsum (20 kg/ha) at sowing.'},{w:'Week 3 (Rosette)',t:'Top Dressing',d:'Apply all Urea (35 kg/ha) at first irrigation.'},{w:'Week 6 (Flowering)',t:'Sulphur Spray',d:'Spray 0.2% Borax solution to improve flowering and pod set.'}]},
+      soybean: {urea:20,dap:35,potash:30,gypsum:0,zinc:10,schedule:[{w:'Week 0 (Sowing)',t:'Seed Treatment',d:'Treat seeds with Rhizobium culture. Apply DAP + Potash at sowing.'},{w:'Week 4 (V4)',t:'Foliar Spray',d:'Apply micronutrient foliar spray (Zinc + Boron). Minimal nitrogen needed.'},{w:'Week 8 (R1-R3)',t:'Pod Fill',d:'Apply light potash top dressing for better pod fill and protein content.'}]},
+      sugarcane:{urea:100,dap:60,potash:50,gypsum:30,zinc:15,schedule:[{w:'Week 0 (Planting)',t:'Basal Application',d:'Apply full DAP (60 kg/ha) + Potash (50 kg/ha) + Zinc in furrows.'},{w:'Month 3',t:'1st Top Dressing',d:'Apply one-third Urea (33 kg/ha) + foliar micronutrient spray.'},{w:'Month 5',t:'2nd Top Dressing',d:'Apply one-third Urea (33 kg/ha) + Potassium chloride.'},{w:'Month 8',t:'Final Dose',d:'Apply remaining Urea (34 kg/ha) for grand growth phase support.'}]},
+    };
+
+    let currentCropKey='wheat';
+
+    function selectCrop(el, key) {
+      document.querySelectorAll('.crop-pill').forEach(p=>p.classList.remove('selected'));
+      el.classList.add('selected');
+      currentCropKey=key;
+      renderFert(key);
+    }
+
+    function renderFert(key) {
+      const d=fertData[key];
+      const fertItems=[
+        {icon:'U',name:'Urea',formula:'CO(NH2)2 - 46% N',qty:d.urea,tip:'Apply in split doses for best absorption. Do not apply before rain.'},
+        {icon:'D',name:'DAP',formula:'NH4H2PO4 - 18N:46P',qty:d.dap,tip:'Best basal fertilizer. Ensures early root development and nutrient uptake.'},
+        {icon:'P',name:'Potash (MOP)',formula:'KCl - 60% K2O',qty:d.potash,tip:'Improves crop strength and disease resistance. Apply near root zone.'},
+        {icon:'Z',name:'Zinc Sulphate',formula:'ZnSO4 - 21% Zn',qty:d.zinc,tip:'Prevents micronutrient deficiency. Mix with soil before sowing.'},
+      ];
+      if(d.gypsum>0) fertItems.push({icon:'G',name:'Gypsum',formula:'CaSO4.2H2O',qty:d.gypsum,tip:'Improves soil structure and adds sulphur. Essential for oilseeds.'});
+
+      document.getElementById('fertGrid').innerHTML=fertItems.map((f,i)=>`
+        <div class="fert-card anim-fade-up delay-${i+1}">
+          <div class="fert-header">
+            <span class="fert-icon">${f.icon}</span>
+            <div><div class="fert-name">${f.name}</div><div class="fert-formula">${f.formula}</div></div>
+          </div>
+          <div class="fert-qty">${f.qty} kg</div>
+          <div class="fert-unit">per hectare</div>
+          <div class="fert-bar">
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(f.qty/1.2,100)}%"></div></div>
+          </div>
+          <div class="fert-tip">${f.tip}</div>
+        </div>
+      `).join('');
+
+      // Trigger progress bars
+      setTimeout(()=>{
+        document.querySelectorAll('.progress-fill').forEach(el=>{
+          const w=el.style.width; el.style.width='0'; requestAnimationFrame(()=>el.style.width=w);
+        });
+      },100);
+
+      const cropNames={wheat:'Wheat',rice:'Rice',maize:'Maize',cotton:'Cotton',mustard:'Mustard',soybean:'Soybean',sugarcane:'Sugarcane'};
+      document.getElementById('schedSubtitle').textContent=`Recommended application timeline for ${cropNames[key]}`;
+      document.getElementById('scheduleTimeline').innerHTML=d.schedule.map(s=>`
+        <div class="sch-item">
+          <div class="sch-week">${s.w}</div>
+          <div class="sch-title">${s.t}</div>
+          <div class="sch-detail">${s.d}</div>
+        </div>
+      `).join('');
+    }
+
+    function calculate() {
+      const area=parseFloat(document.getElementById('farmArea').value)||1;
+      const unit=document.getElementById('areaUnit').value;
+      let ha=area;
+      if(unit==='acre') ha=area*0.4047;
+      else if(unit==='bigha') ha=area*0.2;
+
+      const d=fertData[currentCropKey];
+      const res=document.getElementById('calcResult');
+      res.innerHTML=`<div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">
+        Total fertilizer required for <strong style="color:var(--accent-1)">${area} ${unit}${area>1?'s':''}</strong> (${ha.toFixed(2)} hectares):
+      </div>
+      <div class="calc-res-grid">
+        <div class="calc-res-item"><div class="calc-res-val">${(d.urea*ha).toFixed(0)} kg</div><div class="calc-res-lbl">Urea</div></div>
+        <div class="calc-res-item"><div class="calc-res-val">${(d.dap*ha).toFixed(0)} kg</div><div class="calc-res-lbl">DAP</div></div>
+        <div class="calc-res-item"><div class="calc-res-val">${(d.potash*ha).toFixed(0)} kg</div><div class="calc-res-lbl">Potash</div></div>
+        <div class="calc-res-item"><div class="calc-res-val">₹${((d.urea*ha*7)+(d.dap*ha*27)+(d.potash*ha*15)).toFixed(0)}</div><div class="calc-res-lbl">Est. Cost</div></div>
+      </div>`;
+      res.classList.add('show');
+    }
+
+    renderFert('wheat');
+  </script>
+      </main>
+    </div>
+  </div>
+  <div class="toast-root"></div>
+  <script src="js/shared-nav.js"></script>
+  <script>initNav('fertilizer-advice','Fertilizer Guide','Optimal NPK dosage planner');</script>
+</body>
+</html>

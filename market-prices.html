@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Prices - AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { min-height: 100vh; }
+    .page-wrapper { max-width: 1000px; margin: auto; padding: 28px 20px; }
+    .page-hero { text-align: center; margin-bottom: 24px; }
+    .market-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .ms-card { padding: 16px; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); text-align: center; }
+    .ms-val { font-size: 20px; font-weight: 700; color: var(--accent-1); }
+    .ms-lbl { font-size: 12px; color: var(--text-secondary); }
+    .table-section { padding: 20px; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); margin-bottom: 20px; }
+    .filter-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .search-input { flex: 1; min-width: 180px; }
+    .filter-sel { min-width: 150px; }
+    .price-cell { font-weight: 700; color: var(--accent-1); }
+    .trend-up { color: #22c55e; }
+    .trend-down { color: #ef4444; }
+    .trend-flat { color: #94a3b8; }
+    .crop-cell { display: flex; align-items: center; gap: 8px; }
+    .crop-emoji { font-size: 20px; }
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .news-card { padding: 16px; border-radius: var(--radius-lg); background: var(--glass-bg); border: 1px solid var(--glass-border); }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+
+        <header class="site-header">
+          <a href="index.html" class="brand">
+            <div>
+              <div class="brand-name">AgriAdvisor</div>
+              <div class="brand-sub">Market Prices</div>
+            </div>
+          </a>
+          <nav>
+            <a href="dashboard.html" class="nav-link">Back to Dashboard</a>
+          </nav>
+        </header>
+
+        <div class="page-wrapper">
+          <div class="page-hero">
+            <h1>Live Market Prices</h1>
+            <p>Real-time crop prices with trend analysis</p>
+            <div style="margin-top: 8px;">
+              <span class="stat-badge">Live</span>
+              <span class="stat-badge" id="lastUpdate">Updated: --</span>
+            </div>
+          </div>
+
+          <div class="market-stats">
+            <div class="ms-card"><div class="ms-val">&#8377;2,100</div><div class="ms-lbl">Wheat (top price)</div></div>
+            <div class="ms-card"><div class="ms-val">&#8377;2,500</div><div class="ms-lbl">Rice (avg price)</div></div>
+            <div class="ms-card"><div class="ms-val">+&#8377;120</div><div class="ms-lbl">Today's Best Gain</div></div>
+            <div class="ms-card"><div class="ms-val" id="mktDate">--</div><div class="ms-lbl">Market Date</div></div>
+          </div>
+
+          <div class="table-section">
+            <div class="section-title">Crop Price Database</div>
+            <p class="section-subtitle">Search and filter current market prices</p>
+
+            <div class="filter-row">
+              <input type="text" class="form-input search-input" placeholder="Search crop..." oninput="filterTable(this.value)" id="searchInput">
+              <select class="form-select filter-sel" onchange="filterTable(document.getElementById('searchInput').value)" id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="cereal">Cereals</option>
+                <option value="oilseed">Oilseeds</option>
+                <option value="pulse">Pulses</option>
+                <option value="cash">Cash Crops</option>
+                <option value="vegetable">Vegetables</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="refreshPrices()">Refresh</button>
+            </div>
+
+            <table class="data-table" id="priceTable">
+              <thead>
+                <tr>
+                  <th>Crop</th>
+                  <th>Price / Quintal</th>
+                  <th>Min</th>
+                  <th>Max</th>
+                  <th>Change</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="section-title">Market Insights</div>
+          <div class="news-grid">
+            <div class="news-card">
+              <div class="news-title">Wheat prices expected to rise as exports increase.</div>
+            </div>
+            <div class="news-card">
+              <div class="news-title">Maize procurement starts next week.</div>
+            </div>
+            <div class="news-card">
+              <div class="news-title">Cotton prices may rise due to pest impact.</div>
+            </div>
+          </div>
+        </div>
+
+        <script src="js/api-service.js"></script>
+        <script>
+          const pc = document.getElementById('particles');
+          for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const s = Math.random() * 5 + 2;
+            p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random() * 100}%;animation-duration:${Math.random() * 18 + 10}s;animation-delay:${Math.random() * 12}s;`;
+            pc.appendChild(p);
+          }
+
+          let allPrices = [];
+
+          function updateTimestamps() {
+            document.getElementById('mktDate').textContent = new Date().toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            });
+            document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          }
+
+          function renderTable(data) {
+            document.getElementById('tableBody').innerHTML = data.map(item => {
+              const changeClass = item.change > 0 ? 'trend-up' : item.change < 0 ? 'trend-down' : 'trend-flat';
+              const changeText = item.change > 0 ? `+&#8377;${Math.abs(item.change)}` : item.change < 0 ? `-&#8377;${Math.abs(item.change)}` : 'No change';
+              return `
+                <tr>
+                  <td>
+                    <div class="crop-cell">
+                      <span class="crop-emoji">🌾</span>
+                      <span>${item.crop}</span>
+                    </div>
+                  </td>
+                  <td class="price-cell">&#8377;${Number(item.price).toLocaleString()}</td>
+                  <td>&#8377;${Number(item.min).toLocaleString()}</td>
+                  <td>&#8377;${Number(item.max).toLocaleString()}</td>
+                  <td class="${changeClass}">${changeText}</td>
+                </tr>
+              `;
+            }).join('');
+          }
+
+          function filterTable(query) {
+            const category = document.getElementById('categoryFilter').value;
+            const filtered = allPrices.filter(item => {
+              const matchQ = !query || item.crop.toLowerCase().includes(query.toLowerCase());
+              const matchC = !category || item.category === category;
+              return matchQ && matchC;
+            });
+            renderTable(filtered);
+          }
+
+          async function loadPrices() {
+            try {
+              const data = await APIService.getMarketPrices();
+              allPrices = data || [];
+              updateTimestamps();
+              filterTable(document.getElementById('searchInput').value);
+            } catch (err) {
+              console.error('Failed to load market prices:', err);
+              document.getElementById('tableBody').innerHTML = `
+                <tr>
+                  <td colspan="5" style="text-align:center;color:var(--text-secondary);padding:20px;">
+                    Unable to load market prices from the backend.
+                  </td>
+                </tr>
+              `;
+            }
+          }
+
+          function refreshPrices() {
+            loadPrices();
+          }
+
+          loadPrices();
+        </script>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/shared-nav.js"></script>
+  <script>initNav('market-prices', 'Market Prices', 'Live market rates');</script>
+</body>
+</html>

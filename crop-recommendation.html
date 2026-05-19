@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Recommendation - AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { min-height:100vh; }
+    .page-wrapper { max-width:860px; margin:auto; padding:40px 24px; }
+
+    .page-hero { text-align:center; margin-bottom:36px; }
+    .page-hero .ph-icon { font-size:52px; margin-bottom:12px; display:block;
+      animation:sway 3s ease-in-out infinite; }
+    @keyframes sway {
+      0%,100%{ transform:rotate(-5deg); }
+      50%{ transform:rotate(5deg); }
+    }
+    .page-hero h1 { font-size:28px; font-weight:800; color:var(--text-primary); margin-bottom:8px; }
+    .page-hero p  { font-size:14px; color:var(--text-secondary); }
+
+    /* Input Panel */
+    .input-panel { padding:32px; border-radius:var(--radius-lg);
+      background:var(--glass-bg); border:1px solid var(--glass-border);
+      backdrop-filter:blur(16px); margin-bottom:24px; }
+    .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+    @media(max-width:600px){ .three-col{ grid-template-columns:1fr; } }
+
+    /* Result Display */
+    .result-hero {
+      text-align:center; padding:40px; border-radius:var(--radius-lg); margin-bottom:24px;
+      background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(21,128,61,0.08));
+      border:1px solid rgba(34,197,94,0.25); animation:fadeInUp 0.6s ease;
+      display:none;
+    }
+    .result-hero.show { display:block; }
+    .crop-big { font-size:80px; margin-bottom:16px; animation:bounceIn 0.8s ease; }
+    @keyframes bounceIn {
+      0%{ transform:scale(0.3); opacity:0; }
+      50%{ transform:scale(1.1); }
+      100%{ transform:scale(1); opacity:1; }
+    }
+    .crop-name { font-size:34px; font-weight:800; color:var(--accent-1); margin-bottom:8px; }
+    .confidence-bar { width:200px; margin:16px auto 8px; }
+    .confidence-label { font-size:13px; color:var(--text-secondary); }
+
+    /* Crop Info Cards */
+    .crop-info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
+    .crop-info-card { padding:20px; border-radius:var(--radius-md);
+      background:var(--glass-bg); border:1px solid var(--glass-border); text-align:center;
+      backdrop-filter:blur(12px); animation:fadeInUp 0.5s ease; }
+    .cic-icon  { font-size:28px; margin-bottom:8px; }
+    .cic-value { font-size:18px; font-weight:700; color:var(--accent-1); }
+    .cic-label { font-size:12px; color:var(--text-secondary); margin-top:3px; }
+
+    /* Alternate crops */
+    .alt-section { padding:28px; border-radius:var(--radius-lg);
+      background:var(--glass-bg); border:1px solid var(--glass-border);
+      backdrop-filter:blur(16px); margin-bottom:24px; display:none; }
+    .alt-section.show { display:block; animation:fadeInUp 0.5s ease; }
+    .alt-crops { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+    .alt-crop-chip {
+      padding:10px 20px; border-radius:30px; cursor:pointer; transition:var(--transition);
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+      font-size:14px; color:var(--text-secondary); font-weight:500;
+    }
+    .alt-crop-chip:hover { background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,0.3);
+      color:var(--accent-1); transform:translateY(-2px); }
+
+    /* Seasonal Calendar */
+    .calendar-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:4px; margin-top:16px; }
+    .cal-month {
+      padding:8px 4px; border-radius:6px; text-align:center; font-size:10px;
+      font-weight:600; background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.3);
+      transition:var(--transition);
+    }
+    .cal-month.active { background:rgba(34,197,94,0.2); color:var(--accent-1);
+      border:1px solid rgba(34,197,94,0.3); }
+    .cal-month.sow    { background:rgba(59,130,246,0.2); color:#93c5fd;
+      border:1px solid rgba(59,130,246,0.3); }
+    .cal-month.harvest{ background:rgba(245,158,11,0.2); color:#fcd34d;
+      border:1px solid rgba(245,158,11,0.3); }
+    .cal-legend { display:flex; gap:16px; margin-top:10px; font-size:12px; color:var(--text-secondary); }
+    .cal-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:5px; }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+      <div class="bg-animated"></div>
+  <div class="particles" id="particles"></div>
+
+  <header class="site-header">
+    <a href="index.html" class="brand">
+      <span class="brand-icon">AG</span>
+      <div>
+        <div class="brand-name">AgriAdvisor</div>
+        <div class="brand-sub">Crop Recommendation</div>
+      </div>
+    </a>
+    <nav>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="page-wrapper">
+    <div class="page-hero anim-fade-up">
+      <span class="ph-icon">CR</span>
+      <h1>Smart Crop Recommendation</h1>
+      <p>AI-powered crop suggestion based on your soil, climate, and season</p>
+    </div>
+
+    <!-- Input -->
+    <div class="input-panel anim-fade-up delay-1">
+      <div class="section-title">Crop Input</div>
+      <p class="section-subtitle">More accurate inputs = better recommendations</p>
+
+      <div class="three-col">
+        <div class="form-group">
+          <label class="form-label">Soil pH</label>
+          <input type="number" class="form-input" id="ph" value="6.5" min="3" max="10" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature (C)</label>
+          <input type="number" class="form-input" id="temperature" value="28" min="0" max="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rainfall (mm/year)</label>
+          <input type="number" class="form-input" id="rainfall" value="800" min="0" max="5000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nitrogen (kg/ha)</label>
+          <input type="number" class="form-input" id="n" value="280" min="0" max="600">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phosphorus (kg/ha)</label>
+          <input type="number" class="form-input" id="p" value="120" min="0" max="300">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Potassium (kg/ha)</label>
+          <input type="number" class="form-input" id="k" value="200" min="0" max="500">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Season</label>
+          <select class="form-select" id="season">
+            <option value="rabi">Rabi (Oct-Mar)</option>
+            <option value="kharif">Kharif (Jun-Sep)</option>
+            <option value="zaid">Zaid (Mar-Jun)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Soil Type</label>
+          <select class="form-select" id="soilType">
+            <option value="loamy">Loamy</option>
+            <option value="sandy">Sandy</option>
+            <option value="clay">Clay</option>
+            <option value="silt">Silty</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">State / Region</label>
+          <select class="form-select" id="state">
+            <option value="haryana">Haryana</option>
+            <option value="punjab">Punjab</option>
+            <option value="up">Uttar Pradesh</option>
+            <option value="mp">Madhya Pradesh</option>
+            <option value="raj">Rajasthan</option>
+            <option value="maharashtra">Maharashtra</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-full mt-24" onclick="getCropReco()" id="recoBtn">
+        Get Crop Recommendation
+      </button>
+    </div>
+
+    <!-- Result Hero -->
+    <div class="result-hero" id="resultHero">
+      <div class="crop-big" id="cropEmoji">CR</div>
+      <div class="crop-name" id="cropName">Wheat</div>
+      <p id="cropDesc" style="color:var(--text-secondary);font-size:14px;max-width:480px;margin:0 auto 16px;"></p>
+      <div class="confidence-bar">
+        <div class="progress-bar"><div class="progress-fill" id="confBar" style="width:0%"></div></div>
+      </div>
+      <div class="confidence-label">AI Confidence: <strong id="confLabel" style="color:var(--accent-1)"></strong></div>
+    </div>
+
+    <!-- Crop Info -->
+    <div class="crop-info-grid" id="cropInfoGrid"></div>
+
+    <!-- Seasonal Calendar -->
+    <div class="alt-section" id="calSection">
+      <div class="section-title">Seasonal Calendar</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Optimal sowing and harvesting months</p>
+      <div class="calendar-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><span class="cal-dot" style="background:#93c5fd"></span>Sow</span>
+        <span><span class="cal-dot" style="background:#fcd34d"></span>Harvest</span>
+        <span><span class="cal-dot" style="background:rgba(34,197,94,0.5)"></span>Current Month</span>
+      </div>
+    </div>
+
+    <!-- Alternatives -->
+    <div class="alt-section" id="altSection">
+      <div class="section-title">Alternative Crops</div>
+      <p style="font-size:13px;color:var(--text-secondary);">Also suitable for your conditions:</p>
+      <div class="alt-crops" id="altCrops"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="actionBtns" style="display:none;margin-top:4px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="fertilizer-advice.html" class="btn btn-primary">Get Fertilizer Guide</a>
+        <a href="soil-data.html" class="btn btn-secondary">Soil Health</a>
+        <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pc=document.getElementById('particles');
+    for(let i=0;i<14;i++){
+      const p=document.createElement('div'); p.className='particle';
+      const s=Math.random()*5+2;
+      p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*12}s;`;
+      pc.appendChild(p);
+    }
+
+    const cropData = {
+      wheat:    {emoji:'WH',name:'Wheat',desc:'Ideal for Rabi season on loamy soils with moderate rainfall. High nutritional value and excellent market demand.',water:'400-600mm',temp:'10-24 C',days:'90-120',yield:'3-5 t/ha',sow:[9,10],harvest:[2,3],alts:['barley','mustard','peas']},
+      rice:     {emoji:'RI',name:'Rice',desc:'Thrives in Kharif season with high humidity and ample water. Staple crop with consistent market pricing.',water:'1000-2000mm',temp:'20-40 C',days:'100-140',yield:'4-6 t/ha',sow:[5,6],harvest:[9,10],alts:['maize','sorghum','jute']},
+      maize:    {emoji:'MZ',name:'Maize',desc:'Versatile crop suitable for multiple seasons. High yield potential with good nitrogen content.',water:'500-800mm',temp:'21-30 C',days:'70-100',yield:'5-8 t/ha',sow:[5,6,9],harvest:[8,9,12],alts:['sorghum','sunflower','cotton']},
+      cotton:   {emoji:'CT',name:'Cotton',desc:'Cash crop best suited for black cotton soil with warm temperatures. Good market value.',water:'700-1200mm',temp:'21-35 C',days:'150-180',yield:'2-3 t/ha',sow:[4,5,6],harvest:[10,11,12],alts:['soybean','groundnut','bajra']},
+      mustard:  {emoji:'MS',name:'Mustard',desc:'Excellent Rabi oilseed crop - drought-tolerant with good returns and low water requirements.',water:'250-400mm',temp:'10-25 C',days:'90-110',yield:'1.5-2.5 t/ha',sow:[9,10],harvest:[1,2],alts:['wheat','barley','gram']},
+      soybean:  {emoji:'SB',name:'Soybean',desc:'High-protein legume suitable for Kharif in moderate-rainfall regions. Improves soil nitrogen.',water:'500-700mm',temp:'20-30 C',days:'90-120',yield:'1.5-3 t/ha',sow:[6,7],harvest:[9,10],alts:['groundnut','urad','moong']},
+      sugarcane:{emoji:'SG',name:'Sugarcane',desc:'Long-duration cash crop with very high revenue potential in fertile irrigated land.',water:'1500-2500mm',temp:'20-35 C',days:'270-360',yield:'60-100 t/ha',sow:[1,2,10,11],harvest:[11,12],alts:['cotton','banana','turmeric']},
+    };
+
+    function getCropReco() {
+      const btn=document.getElementById('recoBtn');
+      btn.innerHTML='<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0"></div> Analyzing...';
+      btn.disabled=true;
+
+      setTimeout(()=>{
+        btn.innerHTML='Get Crop Recommendation';
+        btn.disabled=false;
+
+        const ph=parseFloat(document.getElementById('ph').value);
+        const temp=parseFloat(document.getElementById('temperature').value);
+        const rain=parseFloat(document.getElementById('rainfall').value);
+        const n=parseFloat(document.getElementById('n').value);
+        const season=document.getElementById('season').value;
+        const soilType=document.getElementById('soilType').value;
+
+        let key;
+        if(season==='rabi'){
+          if(rain>600 && n>250) key='wheat';
+          else if(ph>6.5 && temp<20) key='mustard';
+          else key='wheat';
+        } else if(season==='kharif'){
+          if(rain>1000) key='rice';
+          else if(soilType==='black'||temp>28) key='cotton';
+          else if(rain>500) key='soybean';
+          else key='maize';
+        } else {
+          key='maize';
+        }
+
+        const c = cropData[key];
+        const conf = Math.floor(Math.random()*12)+83;
+        const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const curMonth=new Date().getMonth();
+
+        // Show result hero
+        document.getElementById('cropEmoji').textContent=c.emoji;
+        document.getElementById('cropName').textContent=c.name;
+        document.getElementById('cropDesc').textContent=c.desc;
+        document.getElementById('confLabel').textContent=conf+'%';
+        document.getElementById('resultHero').classList.add('show');
+        document.getElementById('resultHero').scrollIntoView({behavior:'smooth'});
+        setTimeout(()=>{
+          document.getElementById('confBar').style.width=conf+'%';
+        },300);
+
+        // Crop info cards
+        document.getElementById('cropInfoGrid').innerHTML=`
+          <div class="crop-info-card"><div class="cic-icon">H2O</div><div class="cic-value">${c.water}</div><div class="cic-label">Water Requirement</div></div>
+          <div class="crop-info-card"><div class="cic-icon">TMP</div><div class="cic-value">${c.temp}</div><div class="cic-label">Ideal Temperature</div></div>
+          <div class="crop-info-card"><div class="cic-icon">CAL</div><div class="cic-value">${c.days} days</div><div class="cic-label">Growth Duration</div></div>
+          <div class="crop-info-card"><div class="cic-icon">YLD</div><div class="cic-value">${c.yield}</div><div class="cic-label">Expected Yield</div></div>
+        `;
+
+        // Calendar
+        const calGrid=document.getElementById('calGrid');
+        calGrid.innerHTML=months.map((m,i)=>{
+          let cls='';
+          if(i===curMonth) cls='active';
+          else if(c.sow.includes(i)) cls='sow';
+          else if(c.harvest.includes(i)) cls='harvest';
+          return `<div class="cal-month ${cls}">${m}</div>`;
+        }).join('');
+        document.getElementById('calSection').classList.add('show');
+
+        // Alternatives
+        const altKeys=c.alts||[];
+        document.getElementById('altCrops').innerHTML=altKeys.map(key=>{
+          const d=cropData[key]||{emoji:'CR',name:key.charAt(0).toUpperCase()+key.slice(1)};
+          return `<div class="alt-crop-chip">${d.emoji} ${d.name}</div>`;
+        }).join('');
+        document.getElementById('altSection').classList.add('show');
+        document.getElementById('actionBtns').style.display='block';
+      },1800);
+    }
+  </script>
+      </main>
+    </div>
+  </div>
+  <div class="toast-root"></div>
+  <script src="js/shared-nav.js"></script>
+  <script>initNav('crop-recommendation','🌱 Crop Recommendation','AI-powered crop advisor');</script>
+</body>
+</html>

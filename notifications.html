@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .notif-filters { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .nf-chip {
+      padding:7px 14px; border-radius:var(--r-pill); font-size:12px; font-weight:600;
+      cursor:pointer; transition:all var(--t-fast);
+      background:rgba(255,255,255,0.04); border:1px solid var(--c-border-subtle);
+      color:var(--c-text-mute);
+    }
+    .nf-chip:hover { border-color:var(--c-border-hover); color:var(--c-text-2); }
+    .nf-chip.active { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.3); color:var(--c-green-1); }
+
+    .notif-item {
+      display:flex; gap:14px; padding:16px 18px; border-radius:var(--r-md);
+      margin-bottom:10px; backdrop-filter:blur(12px);
+      transition:all var(--t-base); cursor:pointer; position:relative;
+      border:1px solid var(--c-border-subtle);
+      background:var(--c-bg-card);
+      animation:fadeInUp 0.4s var(--ease) both;
+    }
+    .notif-item:hover { border-color:var(--c-border-hover); transform:translateX(4px); background:rgba(13,36,22,0.85); }
+    .notif-item.unread { border-color:var(--c-border); }
+    .notif-item.unread::before { content:''; position:absolute; left:0; top:0; bottom:0;
+      width:3px; border-radius:2px 0 0 2px; background:var(--c-green-1); }
+    .notif-item.weather.unread::before { background:var(--c-blue); }
+    .notif-item.market.unread::before  { background:var(--c-gold); }
+    .notif-item.alert.unread::before   { background:var(--c-red); }
+    .notif-item.sales.unread::before   { background:var(--c-green-1); }
+    .notif-item.ai.unread::before      { background:var(--c-purple); }
+
+    .ni-icon-wrap { width:44px; height:44px; border-radius:var(--r-md); flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:22px; }
+    .ni-icon-wrap.weather { background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2); }
+    .ni-icon-wrap.market  { background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.2); }
+    .ni-icon-wrap.alert   { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.2); }
+    .ni-icon-wrap.sales   { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); }
+    .ni-icon-wrap.ai      { background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2); }
+
+    .ni-body { flex:1; min-width:0; }
+    .ni-title { font-size:14px; font-weight:600; color:var(--c-text-1); margin-bottom:3px; }
+    .ni-desc  { font-size:12px; color:var(--c-text-mute); line-height:1.5; }
+    .ni-time  { font-size:11px; color:rgba(255,255,255,0.2); margin-top:5px; display:block; }
+    .ni-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+    .ni-unread-dot { width:8px; height:8px; border-radius:50%; background:var(--c-green-1); }
+
+    .notif-section-label { font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.8px; color:rgba(255,255,255,0.2); padding:8px 0 10px;
+      display:flex; align-items:center; gap:8px; }
+    .notif-section-label::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+    .summary-card { padding:16px; border-radius:var(--r-md); text-align:center;
+      background:var(--c-bg-card); border:1px solid var(--c-border); backdrop-filter:blur(12px); }
+    .summary-card .sv { font-size:24px; font-weight:800; }
+    .summary-card .sl { font-size:11px; color:var(--c-text-mute); margin-top:3px; }
+
+    .pref-item { display:flex; align-items:center; justify-content:space-between;
+      padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .pref-item:last-child { border-bottom:none; }
+    .pref-label { font-size:13px; color:var(--c-text-2); }
+    .pref-desc  { font-size:11px; color:var(--c-text-mute); margin-top:2px; }
+    .toggle { width:40px; height:22px; border-radius:11px; background:var(--c-green-2);
+      position:relative; cursor:pointer; transition:background var(--t-fast); flex-shrink:0; }
+    .toggle::after { content:''; position:absolute; top:3px; width:16px; height:16px;
+      border-radius:50%; background:#fff; transition:transform var(--t-fast);
+      transform:translateX(19px); }
+    .toggle.off { background:rgba(255,255,255,0.1); }
+    .toggle.off::after { transform:translateX(3px); }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+        <div class="flex-between afu mb-20" style="flex-wrap:wrap;gap:12px;">
+          <div>
+            <div class="page-title">Notifications</div>
+            <div class="page-sub">Weather alerts, market updates, and activity from your farm</div>
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark All Read</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearAll()">Clear All</button>
+          </div>
+        </div>
+
+        <div class="summary-grid afu d1">
+          <div class="summary-card"><div class="sv text-red" id="sUnread">0</div><div class="sl">Unread</div></div>
+          <div class="summary-card"><div class="sv text-gold" id="sWeather">0</div><div class="sl">Weather Alerts</div></div>
+          <div class="summary-card"><div class="sv text-green" id="sMarket">0</div><div class="sl">Market Updates</div></div>
+          <div class="summary-card"><div class="sv" style="color:var(--c-purple)" id="sAI">0</div><div class="sl">AI Suggestions</div></div>
+          <div class="summary-card"><div class="sv text-blue" id="sSales">0</div><div class="sl">Sales Activity</div></div>
+        </div>
+
+        <div class="notif-filters afu d2">
+          <div class="nf-chip active" onclick="filterNotifs(this,'all')">All</div>
+          <div class="nf-chip" onclick="filterNotifs(this,'weather')">Weather</div>
+          <div class="nf-chip" onclick="filterNotifs(this,'market')">Market</div>
+          <div class="nf-chip" onclick="filterNotifs(this,'alert')">Alerts</div>
+          <div class="nf-chip" onclick="filterNotifs(this,'sales')">Sales</div>
+          <div class="nf-chip" onclick="filterNotifs(this,'ai')">AI</div>
+        </div>
+
+        <div id="notifList" class="afu d3"><div style="padding:24px;color:var(--c-text-mute);text-align:center;">Loading notifications...</div></div>
+
+        <div class="card card-pad afu d4 mt-24">
+          <div class="card-title mb-16">Notification Preferences</div>
+          <div id="prefList"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-root"></div>
+  <script src="js/api-service.js"></script>
+  <script src="js/shared-nav.js"></script>
+  <script>
+    initNav('notifications','Notifications','Stay updated on weather, market & farm activity');
+
+    let activeFilter = 'all';
+    let notifData = [];
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function filterNotifs(el, type) {
+      document.querySelectorAll('.nf-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      activeFilter = type;
+      renderNotifs();
+    }
+
+    function bucketTime(n) {
+      const t = String(n.time || '');
+      if (t === 'Just now' || t.includes('hour')) return 'Today';
+      if (t === 'Yesterday') return 'Yesterday';
+      return 'Earlier';
+    }
+
+    function refreshSummary() {
+      document.getElementById('sUnread').textContent = notifData.filter(n => n.unread).length;
+      document.getElementById('sWeather').textContent = notifData.filter(n => n.type === 'weather').length;
+      document.getElementById('sMarket').textContent = notifData.filter(n => n.type === 'market').length;
+      document.getElementById('sAI').textContent = notifData.filter(n => n.type === 'ai').length;
+      document.getElementById('sSales').textContent = notifData.filter(n => n.type === 'sales').length;
+    }
+
+    function renderNotifs() {
+      const data = activeFilter === 'all' ? notifData : notifData.filter(n => n.type === activeFilter);
+      if (!data.length) {
+        document.getElementById('notifList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--c-text-mute);font-size:14px;">No notifications in this category</div>';
+        return;
+      }
+
+      const today = data.filter(n => bucketTime(n) === 'Today');
+      const yest = data.filter(n => bucketTime(n) === 'Yesterday');
+      const older = data.filter(n => bucketTime(n) === 'Earlier');
+
+      let html = '';
+      if (today.length) html += `<div class="notif-section-label">Today</div>${today.map(notifCard).join('')}`;
+      if (yest.length) html += `<div class="notif-section-label">Yesterday</div>${yest.map(notifCard).join('')}`;
+      if (older.length) html += `<div class="notif-section-label">Earlier</div>${older.map(notifCard).join('')}`;
+      document.getElementById('notifList').innerHTML = html;
+    }
+
+    function notifCard(n) {
+      return `<div class="notif-item ${n.type} ${n.unread ? 'unread' : ''}" onclick="markRead(${n.id}, this)">
+        <div class="ni-icon-wrap ${n.type}">${escapeHtml(n.icon)}</div>
+        <div class="ni-body">
+          <div class="ni-title">${escapeHtml(n.title)}</div>
+          <div class="ni-desc">${escapeHtml(n.desc)}</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
+            <span class="ni-time">${escapeHtml(n.time)}</span>
+            ${n.link ? `<a class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:11px;" href="${n.link}" onclick="event.stopPropagation()">${escapeHtml(n.action)}</a>` : `<button class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation()">${escapeHtml(n.action)}</button>`}
+          </div>
+        </div>
+        <div class="ni-right">
+          ${n.unread ? '<div class="ni-unread-dot"></div>' : ''}
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:11px;" onclick="event.stopPropagation();dismissNotif(${n.id})">×</button>
+        </div>
+      </div>`;
+    }
+
+    async function markRead(id, el) {
+      const n = notifData.find(x => x.id === id);
+      if (n) { n.unread = false; el.classList.remove('unread'); refreshSummary(); }
+      try { await APIService.markNotificationRead(id); } catch {}
+    }
+
+    async function dismissNotif(id) {
+      notifData = notifData.filter(n => n.id !== id);
+      renderNotifs();
+      refreshSummary();
+      try { await APIService.deleteNotification(id); } catch {}
+    }
+
+    async function markAllRead() {
+      notifData.forEach(n => n.unread = false);
+      renderNotifs();
+      refreshSummary();
+      try { await APIService.markAllNotificationsRead(); } catch {}
+      showToast('All notifications marked as read', '', 'success');
+    }
+
+    async function clearAll() {
+      if (confirm('Clear all notifications?')) {
+        notifData = [];
+        renderNotifs();
+        refreshSummary();
+        try { await APIService.clearNotifications(); } catch {}
+      }
+    }
+
+    const prefs = [
+      {label:'Weather Alerts',desc:'Rain, heatwave, frost and storm warnings',on:true},
+      {label:'Market Price Updates',desc:'Daily market price changes for my crops',on:true},
+      {label:'AI Recommendations',desc:'Personalized crop and fertilizer suggestions',on:true},
+      {label:'Buyer Inquiries',desc:'Messages from buyers on my listings',on:true},
+      {label:'Sale Confirmations',desc:'Order placement and payment updates',on:true},
+      {label:'Pest & Disease Alerts',desc:'Nearby farm pest activity reports',on:false},
+      {label:'Weekly Reports',desc:'Summary of market trends and farm analytics',on:false},
+    ];
+    document.getElementById('prefList').innerHTML = prefs.map(p => `
+      <div class="pref-item">
+        <div>
+          <div class="pref-label">${escapeHtml(p.label)}</div>
+          <div class="pref-desc">${escapeHtml(p.desc)}</div>
+        </div>
+        <div class="toggle ${p.on ? '' : 'off'}" onclick="this.classList.toggle('off'); showToast('Preference updated', '', 'success')"></div>
+      </div>
+    `).join('');
+
+    async function loadNotifications() {
+      try {
+        const response = await APIService.getNotifications();
+        notifData = response.notifications || [];
+        refreshSummary();
+        renderNotifs();
+      } catch (error) {
+        console.error('Notification load failed:', error);
+        document.getElementById('notifList').innerHTML = '<div style="text-align:center;padding:40px;color:var(--c-red);font-size:14px;">Unable to load live notifications</div>';
+      }
+    }
+
+    loadNotifications();
+  </script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #020905;
+    }
+    .auth-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 520px;
+      padding: 44px 40px;
+      animation: fadeInScale 0.6s ease;
+      background: rgba(8,22,14,0.50);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+    }
+    .auth-header { text-align:center; margin-bottom:32px; }
+    .auth-logo {
+      width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      margin: 0 auto 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #021008;
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 14px 30px rgba(34,197,94,0.22);
+      animation: bounce 2s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-8px); }
+    }
+    .auth-title { font-size:26px; font-weight:800; color:var(--c-text-1); }
+    .auth-sub   { font-size:14px; color:var(--c-text-mute); margin-top:6px; }
+    .step-indicator {
+      display:flex; justify-content:center; align-items:center; gap:0; margin-bottom:28px;
+    }
+    .step {
+      width:32px; height:32px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-size:13px; font-weight:700; transition:var(--t-base);
+      border:2px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.45); background:transparent;
+    }
+    .step.active { border-color:var(--c-green-1); color:var(--c-green-1); background:rgba(34,197,94,0.12); }
+    .step.done   { background:var(--c-green-2); border-color:var(--c-green-2); color:#fff; }
+    .step-line   { flex:1; height:2px; background:rgba(255,255,255,0.1); max-width:40px; }
+    .step-line.done { background:var(--c-green-2); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .password-wrapper { position:relative; }
+    .password-wrapper .form-input { padding-right:46px; }
+    .toggle-pwd {
+      position:absolute; right:14px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; font-size:16px; color:var(--c-text-mute);
+      transition:color 0.2s;
+    }
+    .toggle-pwd:hover { color:var(--c-green-1); }
+    .strength-bar { display:flex; gap:4px; margin-top:8px; }
+    .strength-seg {
+      flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.1); transition:background 0.4s;
+    }
+    .strength-seg.weak   { background:#ef4444; }
+    .strength-seg.fair   { background:#f59e0b; }
+    .strength-seg.good   { background:#22c55e; }
+    .strength-seg.strong { background:#16a34a; }
+    .strength-label { font-size:11px; color:var(--c-text-mute); margin-top:4px; }
+    .login-link { text-align:center; margin-top:20px; font-size:14px; color:var(--c-text-mute); }
+    .login-link a { color:var(--c-green-1); text-decoration:none; font-weight:600; }
+    .login-link a:hover { text-decoration:underline; }
+    .terms { font-size:12px; color:var(--c-text-mute); line-height:1.6; margin-top:16px; text-align:center; }
+    .terms a { color:var(--c-green-1); text-decoration:none; }
+    .error-msg {
+      display:none;
+      padding:12px 16px;
+      border-radius:10px;
+      background:rgba(239,68,68,0.1);
+      border:1px solid rgba(239,68,68,0.3);
+      color:#fca5a5;
+      font-size:13px;
+      margin-bottom:16px;
+    }
+    .error-msg.show { display:block; }
+  </style>
+</head>
+<body>
+  <div class="auth-video-bg" aria-hidden="true">
+    <video autoplay muted loop playsinline preload="auto">
+      <source src="farmlanddrone.mp4" type="video/mp4">
+    </video>
+    <div class="auth-video-dim"></div>
+  </div>
+  <div class="bg-animated"></div>
+  <div class="particles" id="particles"></div>
+
+  <header class="site-header">
+    <a href="index.html" class="brand">
+      <span class="brand-icon">AG</span>
+      <div>
+        <div class="brand-name">AgriAdvisor</div>
+        <div class="brand-sub">Digital Farming Advisory System</div>
+      </div>
+    </a>
+    <nav>
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="login.html" class="btn btn-secondary btn-sm" style="margin-left:8px;">Login</a>
+    </nav>
+  </header>
+
+  <div class="auth-wrapper">
+    <div class="auth-card glass">
+      <div class="auth-header">
+        <div class="auth-logo">AG</div>
+        <div class="auth-title">Create Your Account</div>
+        <div class="auth-sub">Join thousands of farmers using AI-powered advice</div>
+      </div>
+
+      <div class="step-indicator">
+        <div class="step active" id="step1">1</div>
+        <div class="step-line" id="line1"></div>
+        <div class="step" id="step2">2</div>
+        <div class="step-line" id="line2"></div>
+        <div class="step" id="step3">3</div>
+      </div>
+
+      <form id="regForm" onsubmit="handleRegister(event)" novalidate>
+        <div id="errorMsg" class="error-msg"></div>
+
+        <div id="page1">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-input" id="firstName" placeholder="Ravi" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-input" id="lastName" placeholder="Kumar">
+            </div>
+          </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-input" id="phone" placeholder="9876543210" inputmode="numeric" maxlength="10" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address (optional)</label>
+              <input type="email" class="form-input" id="email" placeholder="farmer@gmail.com" autocomplete="off">
+            </div>
+          <button type="button" class="btn btn-primary btn-full mt-16" onclick="goStep(2)">Continue</button>
+        </div>
+
+        <div id="page2" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Farm Location / Village</label>
+            <input type="text" class="form-input" id="location" list="citySuggestions" placeholder="e.g. Rohtak, Haryana" required>
+            <datalist id="citySuggestions">
+              <option value="Rohtak, Haryana"></option>
+              <option value="Hisar, Haryana"></option>
+              <option value="Karnal, Haryana"></option>
+              <option value="Kurukshetra, Haryana"></option>
+              <option value="Sirsa, Haryana"></option>
+              <option value="Delhi, Delhi"></option>
+              <option value="Gurugram, Haryana"></option>
+              <option value="Faridabad, Haryana"></option>
+              <option value="Panipat, Haryana"></option>
+              <option value="Ludhiana, Punjab"></option>
+              <option value="Amritsar, Punjab"></option>
+              <option value="Jalandhar, Punjab"></option>
+              <option value="Chandigarh, Chandigarh"></option>
+              <option value="Jaipur, Rajasthan"></option>
+              <option value="Alwar, Rajasthan"></option>
+              <option value="Kota, Rajasthan"></option>
+              <option value="Udaipur, Rajasthan"></option>
+              <option value="Agra, Uttar Pradesh"></option>
+              <option value="Lucknow, Uttar Pradesh"></option>
+              <option value="Kanpur, Uttar Pradesh"></option>
+              <option value="Varanasi, Uttar Pradesh"></option>
+              <option value="Bareilly, Uttar Pradesh"></option>
+              <option value="Patna, Bihar"></option>
+              <option value="Muzaffarpur, Bihar"></option>
+              <option value="Gaya, Bihar"></option>
+              <option value="Ranchi, Jharkhand"></option>
+              <option value="Jamshedpur, Jharkhand"></option>
+              <option value="Indore, Madhya Pradesh"></option>
+              <option value="Bhopal, Madhya Pradesh"></option>
+              <option value="Gwalior, Madhya Pradesh"></option>
+              <option value="Nagpur, Maharashtra"></option>
+              <option value="Pune, Maharashtra"></option>
+              <option value="Nashik, Maharashtra"></option>
+              <option value="Ahmedabad, Gujarat"></option>
+              <option value="Rajkot, Gujarat"></option>
+              <option value="Surat, Gujarat"></option>
+              <option value="Vadodara, Gujarat"></option>
+              <option value="Bengaluru, Karnataka"></option>
+              <option value="Mysuru, Karnataka"></option>
+              <option value="Mangaluru, Karnataka"></option>
+              <option value="Hyderabad, Telangana"></option>
+              <option value="Warangal, Telangana"></option>
+              <option value="Chennai, Tamil Nadu"></option>
+              <option value="Coimbatore, Tamil Nadu"></option>
+              <option value="Madurai, Tamil Nadu"></option>
+              <option value="Kolkata, West Bengal"></option>
+              <option value="Siliguri, West Bengal"></option>
+              <option value="Bhubaneswar, Odisha"></option>
+              <option value="Cuttack, Odisha"></option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Crop</label>
+            <select class="form-select" id="crop" required>
+              <option value="">Select your main crop</option>
+              <option>Wheat</option>
+              <option>Rice</option>
+              <option>Maize</option>
+              <option>Cotton</option>
+              <option>Sugarcane</option>
+              <option>Soybean</option>
+              <option>Mustard</option>
+              <option>Pulses</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Farm Size (in acres)</label>
+            <input type="number" class="form-input" id="farmSize" placeholder="e.g. 5" min="0.1" step="0.5">
+          </div>
+          <div style="display:flex; gap:12px;">
+            <button type="button" class="btn btn-secondary" style="flex:1" onclick="goStep(1)">Back</button>
+            <button type="button" class="btn btn-primary" style="flex:2" onclick="goStep(3)">Continue</button>
+          </div>
+        </div>
+
+        <div id="page3" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Create Password</label>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)" required>
+              <button type="button" class="toggle-pwd" onclick="togglePwd('password', this)">Show</button>
+            </div>
+            <div class="strength-bar">
+              <div class="strength-seg" id="seg1"></div>
+              <div class="strength-seg" id="seg2"></div>
+              <div class="strength-seg" id="seg3"></div>
+              <div class="strength-seg" id="seg4"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel">Enter a password to check strength</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="confirmPwd" placeholder="Re-enter password" required>
+              <button type="button" class="toggle-pwd" onclick="togglePwd('confirmPwd', this)">Show</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:8px;">
+            <button type="button" class="btn btn-secondary" style="flex:1" onclick="goStep(2)">Back</button>
+            <button type="submit" class="btn btn-primary" style="flex:2">Register</button>
+          </div>
+          <p class="terms">
+            By registering you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          </p>
+        </div>
+      </form>
+
+      <div class="login-link">Already have an account? <a href="login.html">Login here</a></div>
+    </div>
+  </div>
+
+  <script src="js/api-service.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const pc = document.getElementById('particles');
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const s = Math.random() * 5 + 2;
+      p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*12}s;`;
+      pc.appendChild(p);
+    }
+
+    function goStep(n) {
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById('page' + i).style.display = i === n ? 'block' : 'none';
+        const s = document.getElementById('step' + i);
+        s.classList.remove('active', 'done');
+        if (i < n) s.classList.add('done');
+        else if (i === n) s.classList.add('active');
+      }
+      document.getElementById('line1').classList.toggle('done', n > 1);
+      document.getElementById('line2').classList.toggle('done', n > 2);
+    }
+
+    function togglePwd(id, btn) {
+      const el = document.getElementById(id);
+      if (el.type === 'password') {
+        el.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        el.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    function checkStrength(val) {
+      const segs = ['seg1', 'seg2', 'seg3', 'seg4'];
+      const lbl = document.getElementById('strengthLabel');
+      segs.forEach(s => document.getElementById(s).className = 'strength-seg');
+      if (!val) {
+        lbl.textContent = 'Enter a password to check strength';
+        return;
+      }
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const labels = ['Too Short', 'Weak', 'Fair', 'Good', 'Strong'];
+      lbl.textContent = 'Strength: ' + labels[score];
+      const className = ['','weak','fair','good','strong'][score];
+      for (let i = 0; i < score; i++) document.getElementById(segs[i]).classList.add(className);
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('errorMsg');
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+    }
+
+    function normalizePhone(value) {
+      return String(value || '').replace(/\D/g, '').slice(0, 10);
+    }
+
+    function isValidPhone(value) {
+      return /^[6-9][0-9]{9}$/.test(String(value || '').trim());
+    }
+
+    function isValidGmail(value) {
+      const email = String(value || '').trim();
+      return email === '' || /^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(email);
+    }
+
+    function hideError() {
+      document.getElementById('errorMsg').classList.remove('show');
+    }
+
+    async function handleRegister(e) {
+      if (e) e.preventDefault();
+      hideError();
+
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const phoneInput = document.getElementById('phone');
+      const phone = normalizePhone(phoneInput.value);
+      const email = document.getElementById('email').value.trim();
+      const location = document.getElementById('location').value.trim();
+      const crop = document.getElementById('crop').value.trim();
+      const farmSize = parseFloat(document.getElementById('farmSize').value) || 0;
+      const password = document.getElementById('password').value;
+      const confirmPwd = document.getElementById('confirmPwd').value;
+
+      phoneInput.value = phone;
+
+      if (!firstName) { showError('Please enter your first name.'); return; }
+      if (!isValidPhone(phone)) {
+        showError('Phone number must be exactly 10 digits and start with 6, 7, 8, or 9.');
+        return;
+      }
+      if (!isValidGmail(email)) {
+        showError('Email must be a valid Gmail address ending in @gmail.com.');
+        return;
+      }
+      if (!location) { showError('Please enter your farm location or village.'); return; }
+      if (!crop) { showError('Please select your primary crop.'); return; }
+      if (!password) { showError('Please enter a password.'); return; }
+      if (password !== confirmPwd) { showError('Passwords do not match.'); return; }
+      if (password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+      const form = document.getElementById('regForm');
+      const btn = form.querySelector('button[type="submit"]');
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Registering...';
+      showAuthLoadingOverlay('Creating account...', 'Saving your profile and preparing the dashboard.');
+
+      try {
+        const response = await APIService.register({
+          firstName,
+          lastName,
+          phone,
+          email,
+          location,
+          crop,
+          farmSize,
+          password
+        });
+
+        APIService.storeUserData(response.user);
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1300);
+      } catch (err) {
+        console.error('Registration error:', err);
+        hideAuthLoadingOverlay();
+        showError('Registration failed: ' + (err.message || 'Unknown error'));
+        btn.textContent = original;
+        btn.disabled = false;
+      }
+    }
+
+    goStep(1);
+  </script>
+</body>
+</html>
+

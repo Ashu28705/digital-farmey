@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Farmer Dashboard — AgriAdvisor Digital Farming Platform">
+  <title>Dashboard — AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Weather Hero ── */
+    .weather-hero {
+      background: linear-gradient(135deg, rgba(30,64,175,0.22), rgba(59,130,246,0.1));
+      border: 1px solid rgba(96,165,250,0.2);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
+      position: relative; overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    .weather-hero::before { 
+      content: ''; position: absolute; right: -40px; top: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%); 
+    }
+    .w-temp-big { font-size: 64px; font-weight: 900; color: #93c5fd; line-height: 1; }
+    .w-cond     { font-size: 16px; color: rgba(147,197,253,0.9); margin-top: 4px; font-weight: 500; }
+    .w-loc      { font-size: 12px; color: var(--c-text-mute); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    .w-icon     { font-size: 80px; animation: float 4s ease-in-out infinite; }
+    .w-stats    { display: flex; gap: 24px; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 16px 24px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.05); }
+    .w-stat .val{ font-size: 20px; font-weight: 700; color: var(--c-text-1); }
+    .w-stat .lbl{ font-size: 11px; color: var(--c-text-mute); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* ── Forecast Row ── */
+    .forecast-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; margin-top: 16px; }
+    .forecast-row::-webkit-scrollbar { height:4px; }
+    .fc { flex-shrink:0; width:90px; padding:16px 12px; border-radius:var(--r-md); text-align:center;
+      background:rgba(255,255,255,0.03); border:1px solid var(--c-border-subtle);
+      transition:all var(--t-base); }
+    .fc.today { background:rgba(59,130,246,0.1); border-color:rgba(96,165,250,0.25); box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
+    .fc:hover { transform:translateY(-4px); border-color:var(--c-border-hover); background: rgba(255,255,255,0.06); }
+    .fc-day  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--c-text-mute); }
+    .fc-icon { font-size:28px; margin:8px 0; }
+    .fc-temp { font-size:16px; font-weight:700; color:var(--c-text-1); }
+    .fc-rain { font-size:12px; color:#93c5fd; margin-top:4px; }
+
+    /* ── Quick Actions ── */
+    .qa-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    @media(max-width:700px){ .qa-grid{ grid-template-columns:repeat(2,1fr); } }
+    .qa-btn {
+      padding:16px 12px; border-radius:var(--r-md); text-align:center;
+      background:var(--glass-sm); border:1px solid var(--c-border-subtle);
+      cursor:pointer; transition:all var(--t-base);
+    }
+    .qa-btn:hover { 
+      transform:translateY(-4px); 
+      border-color:var(--c-border-hover);
+      background: rgba(34,197,94,0.05);
+      box-shadow:var(--shadow-sm),var(--glow-green); 
+    }
+    .qa-icon { font-size:32px; margin-bottom:12px; display:block; transition:transform var(--t-base); }
+    .qa-btn:hover .qa-icon { transform:scale(1.15) translateY(-2px); }
+    .qa-label { font-size:13px; font-weight:600; color:var(--c-text-1); }
+
+    /* ── AI Panel ── */
+    .ai-panel {
+      background:linear-gradient(135deg, rgba(168,85,247,0.12), rgba(139,92,246,0.06));
+      border:1px solid rgba(168,85,247,0.2);
+      border-radius:var(--r-lg); padding:24px;
+      position:relative; overflow:hidden;
+    }
+    .ai-panel::before { 
+      content:''; position:absolute; inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23a855f7' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .ai-badge { display:inline-flex; align-items:center; gap:8px;
+      padding:6px 14px; border-radius:var(--r-pill); margin-bottom:20px;
+      background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.25);
+      font-size:12px; font-weight:700; color:#d8b4fe; text-transform:uppercase; letter-spacing:0.5px; }
+    .ai-pulse { width:8px; height:8px; border-radius:50%; background:#a855f7;
+      animation:blink 1.5s infinite; box-shadow: 0 0 10px #a855f7; }
+    .ai-reco-item {
+      display:flex; gap:16px; padding:16px 0;
+      border-bottom:1px solid rgba(255,255,255,0.06); align-items:flex-start;
+      transition: background 0.3s ease;
+      border-radius: 8px;
+    }
+    .ai-reco-item:hover { background: rgba(255,255,255,0.02); }
+    .ai-reco-item:last-child { border-bottom:none; padding-bottom:0; }
+    .ai-reco-icon { font-size:28px; flex-shrink:0; background: rgba(0,0,0,0.2); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+    .ai-reco-title{ font-size:15px; font-weight:700; color:var(--c-text-1); margin-bottom:4px; }
+    .ai-reco-desc { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.6; }
+    .ai-reco-conf { font-size:12px; color:#d8b4fe; font-weight:700; margin-top:8px; display: inline-block; background: rgba(168,85,247,0.1); padding: 2px 8px; border-radius: 4px;}
+
+    /* ── Lists & Tables ── */
+    .inventory-list { display: flex; flex-direction: column; gap: 12px; }
+    .inv-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--c-border-subtle);
+      border-radius: var(--r-md); transition: all 0.2s ease;
+    }
+    .inv-item:hover { background: rgba(34,197,94,0.03); border-color: rgba(34,197,94,0.2); }
+    .inv-info { display: flex; align-items: center; gap: 16px; }
+    .inv-img { width: 48px; height: 48px; border-radius: 8px; background: var(--c-bg-dark); display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid var(--c-border-subtle); }
+    .inv-name { font-size: 15px; font-weight: 700; color: var(--c-text-1); }
+    .inv-qty { font-size: 12px; color: var(--c-text-mute); margin-top: 2px; }
+    .inv-meta { text-align: right; }
+    .inv-price { font-size: 16px; font-weight: 700; color: var(--c-green-1); }
+    .inv-status { margin-top: 4px; }
+
+    .market-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .market-card {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; background: var(--glass-sm); border: 1px solid var(--c-border-subtle);
+      border-radius: var(--r-md); transition: transform 0.2s, border-color 0.2s;
+    }
+    .market-card:hover { transform: translateY(-2px); border-color: var(--c-green-2); }
+    .mkt-left { display: flex; gap: 16px; align-items: center; }
+    .mkt-icon { font-size: 32px; }
+    .mkt-title { font-size: 15px; font-weight: 700; }
+    .mkt-seller { font-size: 12px; color: var(--c-text-mute); display: flex; align-items: center; gap: 4px; margin-top: 4px;}
+    .mkt-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;}
+    .mkt-price { font-size: 18px; font-weight: 800; color: var(--c-text-1); }
+    .mkt-qty { font-size: 12px; color: var(--c-text-2); background: rgba(34,197,94,0.1); padding: 2px 8px; border-radius: 4px;}
+
+    /* ── Activity feed ── */
+    .act-item { display:flex; gap:16px; padding:16px 0;
+      border-bottom:1px solid rgba(255,255,255,0.04); align-items:flex-start; }
+    .act-item:last-child { border-bottom:none; }
+    .act-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .act-icon.sale { background: rgba(34,197,94,0.15); color: var(--c-green-1); border: 1px solid rgba(34,197,94,0.3); }
+    .act-icon.alert { background: rgba(239,68,68,0.15); color: var(--c-red); border: 1px solid rgba(239,68,68,0.3); }
+    .act-icon.notif { background: rgba(59,130,246,0.15); color: var(--c-blue); border: 1px solid rgba(59,130,246,0.3); }
+    .act-content { flex:1; }
+    .act-title { font-size:14px; color:var(--c-text-1); font-weight: 600; margin-bottom: 2px; }
+    .act-desc { font-size: 13px; color: var(--c-text-mute); }
+    .act-time { font-size:11px; color:rgba(255,255,255,0.4); margin-top:6px; display:block; }
+
+    /* ── 2-Col Dashboard layout ── */
+    .dash-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; }
+    @media(max-width:1024px){ .dash-grid{ grid-template-columns:1fr; } }
+    .dash-col { display:flex; flex-direction:column; gap:24px; }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+
+    <div class="main-content">
+      <div class="top-bar"></div>
+
+      <main class="page">
+        <!-- Page Header -->
+        <div class="page-header flex-between afu" style="flex-wrap:wrap;gap:16px;">
+          <div>
+            <div class="page-title" id="dashboardTitle">🌾 Farmer Dashboard</div>
+            <div class="page-sub" id="todayDate">Loading date...</div>
+          </div>
+          <div class="flex gap-12">
+            <a href="sell-crops.html" class="btn btn-secondary">🌿 List a Crop</a>
+            <a href="marketplace.html" class="btn btn-primary">🛒 Marketplace</a>
+          </div>
+        </div>
+
+        <!-- Full Width Weather Banner -->
+        <div class="weather-hero afu d1 card-modern hover-glow">
+          <div style="flex: 1; min-width: 250px;">
+            <div class="w-loc" id="wLoc">Location loading... • <span id="wDate"></span></div>
+            <div class="w-temp-big" id="wTemp">-- C</div>
+            <div class="w-cond" id="wCond">Loading weather...</div>
+          </div>
+          <div style="flex-shrink: 0; padding: 0 40px;">
+            <div class="w-icon" id="wIcon">🌤️</div>
+          </div>
+          <div class="w-stats" style="flex: 2; min-width: 300px; justify-content: space-around;">
+            <div class="w-stat text-center">
+              <div class="val" id="wHum">--%</div><div class="lbl">Humidity</div>
+            </div>
+            <div class="w-stat text-center">
+              <div class="val" id="wWind">-- km/h</div><div class="lbl">Wind</div>
+            </div>
+            <div class="w-stat text-center">
+              <div class="val" id="wRain">10%</div><div class="lbl">Rain Prob.</div>
+            </div>
+          </div>
+          
+          <div style="flex-basis: 100%;">
+            <div class="forecast-row" id="forecastRow"></div>
+          </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dash-grid">
+          
+          <!-- Left Column -->
+          <div class="dash-col">
+            
+            <!-- Quick Actions -->
+            <div class="card card-pad-lg afu d2 card-modern hover-glow">
+              <div class="card-header">
+                <div class="card-title">⚡ Quick Actions</div>
+              </div>
+              <div class="qa-grid">
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='crop-recommendation.html'">
+                  <span class="qa-icon">🌱</span>
+                  <div class="qa-label">Crop Advice</div>
+                </div>
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='fertilizer-advice.html'">
+                  <span class="qa-icon">🧪</span>
+                  <div class="qa-label">Fertilizer Guide</div>
+                </div>
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='sell-crops.html'">
+                  <span class="qa-icon">📦</span>
+                  <div class="qa-label">Sell Crops</div>
+                </div>
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='marketplace.html'">
+                  <span class="qa-icon">🛒</span>
+                  <div class="qa-label">Marketplace</div>
+                </div>
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='soil-data.html'">
+                  <span class="qa-icon">🌍</span>
+                  <div class="qa-label">Soil Health</div>
+                </div>
+                <div class="qa-btn hover-glow" title="Open feature" onclick="location.href='alerts.html'">
+                  <span class="qa-icon">⚠️</span>
+                  <div class="qa-label">Alerts</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Farmer Inventory Section -->
+            <div class="card card-pad-lg afu d3 card-modern hover-glow">
+              <div class="card-header">
+                <div class="card-title">📦 My Crop Inventory</div>
+                <a href="sell-crops.html" class="card-action">Manage →</a>
+              </div>
+              <div class="inventory-list" id="myInventoryList">
+                <div style="padding:16px; text-align:center; color:var(--c-text-mute);">Loading inventory...</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="dash-col">
+            
+            <!-- AI Recommendations -->
+            <div class="ai-panel afu d2 card-modern hover-glow">
+              <div class="ai-badge"><span class="ai-pulse"></span> AgriAdvisor AI</div>
+              <div id="aiRecos">
+                <div class="ai-reco-item">
+                  <span class="ai-reco-icon">🌧️</span>
+                  <div>
+                    <div class="ai-reco-title">Delay Irrigation by 2 Days</div>
+                    <div class="ai-reco-desc">Heavy rain (15mm) is expected within 36 hours. Skipping the next irrigation cycle will prevent waterlogging and save resources.</div>
+                    <div class="ai-reco-conf">94% Confidence</div>
+                  </div>
+                </div>
+                <div class="ai-reco-item">
+                  <span class="ai-reco-icon">🧪</span>
+                  <div>
+                    <div class="ai-reco-title">Apply Top Dressing (Urea)</div>
+                    <div class="ai-reco-desc">Your Wheat crop is at the CRI stage. Apply Urea (25 kg/ha) within the next 48 hours for optimal tiller development.</div>
+                    <div class="ai-reco-conf">91% Confidence</div>
+                  </div>
+                </div>
+                <div class="ai-reco-item">
+                  <span class="ai-reco-icon">📈</span>
+                  <div>
+                    <div class="ai-reco-title">Optimal Selling Window: Mustard</div>
+                    <div class="ai-reco-desc">Mustard prices have surged by ₹180 this week due to market demand. It is highly recommended to list your inventory now.</div>
+                    <div class="ai-reco-conf">87% Confidence</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Marketplace Section -->
+            <div class="card card-pad-lg afu d3 card-modern hover-glow">
+              <div class="card-header">
+                <div class="card-title">🛒 Live Marketplace</div>
+                <a href="marketplace.html" class="card-action">View All →</a>
+              </div>
+              <div class="market-list">
+                <div class="market-card card-modern hover-glow">
+                  <div class="mkt-left">
+                    <div class="mkt-icon">🫘</div>
+                    <div>
+                      <div class="mkt-title">Organic Chana</div>
+                      <div class="mkt-seller">📍 Karnal, HR • by Singh Farms</div>
+                    </div>
+                  </div>
+                  <div class="mkt-right">
+                    <div class="mkt-price">₹5,300<span style="font-size: 11px; font-weight: 400; color: var(--c-text-mute);">/qtl</span></div>
+                    <div class="mkt-qty">Qty: 20 Qtl</div>
+                    <button class="btn btn-primary btn-sm mt-4" title="Buy this crop now">Buy Now</button>
+                  </div>
+                </div>
+                <div class="market-card card-modern hover-glow">
+                  <div class="mkt-left">
+                    <div class="mkt-icon">🌽</div>
+                    <div>
+                      <div class="mkt-title">Hybrid Maize</div>
+                      <div class="mkt-seller">📍 Panipat, HR • by GreenAgri</div>
+                    </div>
+                  </div>
+                  <div class="mkt-right">
+                    <div class="mkt-price">₹1,850<span style="font-size: 11px; font-weight: 400; color: var(--c-text-mute);">/qtl</span></div>
+                    <div class="mkt-qty">Qty: 50 Qtl</div>
+                    <button class="btn btn-primary btn-sm mt-4" title="Buy this crop now">Buy Now</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card card-pad-lg afu d4 card-modern hover-glow">
+              <div class="card-header">
+                <div class="card-title">📋 Recent Activity</div>
+              </div>
+              <div id="activityFeed">
+                <div class="act-item">
+                  <div class="act-icon sale">💰</div>
+                  <div class="act-content">
+                    <div class="act-title">Sale Completed</div>
+                    <div class="act-desc">You successfully sold 12 qtl of Wheat to AgroCorp.</div>
+                    <span class="act-time">2 hours ago</span>
+                  </div>
+                </div>
+                <div class="act-item">
+                  <div class="act-icon alert">⚠️</div>
+                  <div class="act-content">
+                    <div class="act-title">Weather Alert</div>
+                    <div class="act-desc">High wind speeds detected in your region. Secure loose equipment.</div>
+                    <span class="act-time">5 hours ago</span>
+                  </div>
+                </div>
+                <div class="act-item">
+                  <div class="act-icon notif">📓</div>
+                  <div class="act-content">
+                    <div class="act-title">Soil Test Processed</div>
+                    <div class="act-desc">Your recent soil sample results are ready. NPK levels are optimal.</div>
+                    <span class="act-time">Yesterday at 4:30 PM</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-root"></div>
+  <script src="js/api-service.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shared-nav.js"></script>
+  <script>
+    // Initialize Navigation
+    initNav('dashboard', 'Dashboard', 'Overview of your farm and market');
+
+    // Dynamic Data Loading
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = checkAuth();
+      if (!token) return;
+
+      const user = await fetchCurrentUser();
+      if(user) {
+        // Update Title
+        const firstName = user.name.split(' ')[0];
+        document.getElementById('dashboardTitle').textContent = `Farmer Dashboard`;
+
+        // Update weather location to user's location
+        const fallbackLocation = user.location || 'Rohtak, Haryana';
+        const locEl = document.getElementById('wLoc');
+        if(locEl) {
+          const dateStr = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short' });
+          locEl.innerHTML = `📍 ${fallbackLocation} • <span id="wDate">${dateStr}</span>`;
+        }
+
+        const userBadge = document.querySelector('.sidebar-farmer .farmer-name');
+        const userRole = document.querySelector('.sidebar-farmer .farmer-role');
+        const userAvi = document.querySelector('.sidebar-farmer .farmer-avi');
+        if (userBadge) userBadge.textContent = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        if (userRole) userRole.textContent = `Verified Farmer · ${user.location || 'India'}`;
+        if (userAvi) {
+          const initials = (user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'GF')
+            .split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+          userAvi.textContent = initials || 'GF';
+        }
+
+        // Fetch inventory
+        loadInventory();
+
+        // Fetch marketplace
+        loadMarketplace();
+
+        // Live weather
+        loadWeather(fallbackLocation);
+      }
+    });
+
+    async function loadInventory() {
+      try {
+        const crops = await APIService.getMyInventory();
+        const list = document.getElementById('myInventoryList');
+        
+        if(!crops || crops.length === 0) {
+          list.innerHTML = `<div style="padding:16px; text-align:center; color:var(--c-text-mute);">
+            No crops in inventory. <a href="sell-crops.html" style="color:var(--c-green-1); text-decoration:underline;">Add crops →</a>
+          </div>`;
+          return;
+        }
+
+        list.innerHTML = crops.map(c => `
+          <div class="inv-item">
+            <div class="inv-info">
+              <div class="inv-img">🌱</div>
+              <div>
+                <div class="inv-name">${c.cropName}</div>
+                <div class="inv-qty">Qty: ${c.quantity} Qtl • ${c.grade || 'Standard'}</div>
+              </div>
+            </div>
+            <div class="inv-meta">
+              <div class="inv-price">₹${c.price} <span style="font-size: 11px; font-weight: 400; color: var(--c-text-mute);">/ Qtl</span></div>
+              <div class="inv-status"><span class="badge ${c.status === 'Active' ? 'badge-green' : 'badge-muted'}">${c.status}</span></div>
+            </div>
+          </div>
+        `).join('');
+      } catch(err) {
+        console.error('Error fetching inventory:', err);
+        document.getElementById('myInventoryList').innerHTML = `<div style="padding:16px; text-align:center; color:var(--c-red);">Error loading inventory</div>`;
+      }
+    }
+
+    async function loadMarketplace() {
+      try {
+        const crops = await APIService.getMarketplace();
+        if(!crops || crops.length === 0) return;
+
+        // Show first 2 items in dashboard
+        const marketList = document.querySelector('.market-list');
+        if(marketList) {
+          marketList.innerHTML = crops.slice(0, 2).map(c => `
+            <div class="market-card card-modern hover-glow">
+              <div class="mkt-left">
+                <div class="mkt-icon">🌾</div>
+                <div>
+                  <div class="mkt-title">${c.cropName}</div>
+                  <div class="mkt-seller">📍 ${c.location} • by ${c.sellerName}</div>
+                </div>
+              </div>
+              <div class="mkt-right">
+                <div class="mkt-price">₹${c.price}<span style="font-size: 11px; font-weight: 400; color: var(--c-text-mute);">/qtl</span></div>
+                <div class="mkt-qty">Qty: ${c.quantity} Qtl</div>
+                <button class="btn btn-primary btn-sm mt-4" title="Buy this crop now" onclick="window.location.href='marketplace.html'">View</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch(err) {
+        console.error('Error loading marketplace:', err);
+      }
+    }
+
+    function weatherIcon(code) {
+      if (code >= 200 && code < 300) return '⛈️';
+      if (code >= 300 && code < 400) return '🌦️';
+      if (code >= 500 && code < 600) return '🌧️';
+      if (code >= 600 && code < 700) return '🌨️';
+      if (code >= 700 && code < 800) return '🌫️';
+      if (code === 800) return '☀️';
+      if (code === 801) return '🌤️';
+      if (code === 802) return '⛅';
+      if (code === 803 || code === 804) return '☁️';
+      return '🌤️';
+    }
+
+    function weatherLabel(code) {
+      if (code >= 200 && code < 300) return 'Thunderstorm';
+      if (code >= 300 && code < 400) return 'Drizzle';
+      if (code >= 500 && code < 600) return 'Rain';
+      if (code >= 600 && code < 700) return 'Snow';
+      if (code >= 700 && code < 800) return 'Mist';
+      if (code === 800) return 'Clear sky';
+      if (code === 801) return 'Few clouds';
+      if (code === 802) return 'Scattered clouds';
+      if (code === 803 || code === 804) return 'Cloudy';
+      return 'Weather';
+    }
+
+    async function loadWeather(location) {
+      try {
+        const weather = await APIService.getWeather(location);
+        const current = weather.current || {};
+        const daily = Array.isArray(weather.daily) ? weather.daily : [];
+        const place = weather.location || {};
+
+        const temp = Math.round(current.temperature ?? 0);
+        const humidity = Math.round(current.humidity ?? 0);
+        const rainProb = Math.round(current.rainProbability ?? 0);
+        const wind = Math.round(current.windSpeed ?? 0);
+        const code = Number(current.weatherCode ?? 0);
+
+        document.getElementById('wLoc').innerHTML = `📍 ${[place.name, place.state].filter(Boolean).join(', ') || location} • <span id="wDate">${new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'short' })}</span>`;
+        document.getElementById('wTemp').textContent = Number.isFinite(temp) ? temp + ' C' : '-- C';
+        document.getElementById('wCond').textContent = current.description || weatherLabel(code);
+        document.getElementById('wIcon').textContent = current.icon || weatherIcon(code);
+        document.getElementById('wRain').textContent = rainProb + '%';
+        document.getElementById('wHum').textContent = humidity + '%';
+        document.getElementById('wWind').textContent = wind + ' km/h';
+
+        document.getElementById('forecastRow').innerHTML = daily.map((day, i) => {
+          const label = i === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en-IN', { weekday: 'short' });
+          const minTemp = Math.round(day.tempMin ?? temp);
+          const maxTemp = Math.round(day.tempMax ?? temp);
+          return `
+            <div class="fc ${i === 0 ? 'today' : ''}">
+              <div class="fc-day">${label}</div>
+              <div class="fc-icon">${day.icon || weatherIcon(Number(day.code ?? code))}</div>
+              <div class="fc-temp">${minTemp} C / ${maxTemp} C</div>
+              <div class="fc-rain">${Math.round(day.rainProb ?? 0)}% rain</div>
+            </div>
+          `;
+        }).join('') || `<div class="fc today"><div class="fc-day">Today</div><div class="fc-icon">${current.icon || 'WX'}</div><div class="fc-temp">${temp} C</div><div class="fc-rain">${rainProb}% rain</div></div>`;
+      } catch (err) {
+        console.error('Error loading weather:', err);
+        document.getElementById('wCond').textContent = 'Weather unavailable';
+      }
+    }
+
+    // Date
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  </script>
+</body>
+</html>
+

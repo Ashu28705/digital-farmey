@@ -1,0 +1,367 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Alerts - AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body { min-height:100vh; }
+    .page-wrapper { max-width:860px; margin:auto; padding:40px 24px; }
+
+    .page-hero { text-align:center; margin-bottom:36px; }
+    .page-hero .ph-icon { font-size:52px; display:block; margin-bottom:12px;
+      animation:shake 2s ease-in-out infinite; }
+    @keyframes shake {
+      0%,100%{ transform:rotate(-5deg); }
+      25%{ transform:rotate(5deg); }
+      50%{ transform:rotate(-3deg); }
+      75%{ transform:rotate(3deg); }
+    }
+    .page-hero h1 { font-size:28px; font-weight:800; color:var(--text-primary); }
+    .page-hero p  { font-size:14px; color:var(--text-secondary); margin-top:6px; }
+
+    /* Alert banner at top */
+    .critical-banner {
+      padding:18px 24px; border-radius:var(--radius-lg); margin-bottom:24px;
+      background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(220,38,38,0.08));
+      border:1px solid rgba(239,68,68,0.35); display:flex; gap:16px; align-items:center;
+      animation:pulse-glow-red 2s infinite;
+    }
+    @keyframes pulse-glow-red {
+      0%,100%{ box-shadow:0 0 10px rgba(239,68,68,0.1); }
+      50%{ box-shadow:0 0 30px rgba(239,68,68,0.3); }
+    }
+    .critical-icon { font-size:28px; font-weight:800; flex-shrink:0; animation:shake 1s ease-in-out infinite; }
+    .critical-text h3 { font-size:17px; font-weight:700; color:#fca5a5; }
+    .critical-text p  { font-size:13px; color:rgba(252,165,165,0.7); margin-top:4px; }
+
+    /* 7-day forecast */
+    .forecast-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; margin-bottom:24px; }
+    .forecast-strip::-webkit-scrollbar{ height:4px; }
+    .forecast-strip::-webkit-scrollbar-thumb{ background:var(--accent-2); border-radius:2px; }
+    .fc-day {
+      flex-shrink:0; width:100px; padding:16px 12px; border-radius:var(--radius-md);
+      background:var(--glass-bg); border:1px solid var(--glass-border);
+      text-align:center; backdrop-filter:blur(12px); transition:var(--transition);
+    }
+    .fc-day.today { border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.08); }
+    .fc-day:hover { transform:translateY(-4px); }
+    .fc-day-name  { font-size:11px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; }
+    .fc-icon      { font-size:28px; margin:8px 0; }
+    .fc-temp      { font-size:18px; font-weight:700; color:var(--text-primary); }
+    .fc-rain      { font-size:11px; color:#93c5fd; margin-top:4px; }
+    .fc-label     { font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; text-transform:uppercase; letter-spacing:0.4px; }
+
+    /* Alert cards */
+    .alert-card {
+      padding:22px; border-radius:var(--radius-lg); margin-bottom:16px;
+      backdrop-filter:blur(16px); display:flex; gap:18px; align-items:flex-start;
+      transition:var(--transition); cursor:pointer; animation:fadeInUp 0.4s ease;
+    }
+    .alert-card:hover { transform:translateX(4px); }
+    .alert-card.critical { background:rgba(239,68,68,0.1);  border:1px solid rgba(239,68,68,0.3); }
+    .alert-card.warning  { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); }
+    .alert-card.info     { background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); }
+    .alert-card.good     { background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); }
+
+    .a-icon  { font-size:20px; font-weight:800; width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); }
+    .a-body  {}
+    .a-title { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+    .a-desc  { font-size:13px; color:var(--text-secondary); line-height:1.5; margin-bottom:8px; }
+    .a-meta  { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .a-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:12px;
+      font-size:11px; font-weight:600; }
+    .a-badge.red    { background:rgba(239,68,68,0.15); color:#fca5a5; }
+    .a-badge.yellow { background:rgba(245,158,11,0.15); color:#fcd34d; }
+    .a-badge.blue   { background:rgba(59,130,246,0.15); color:#93c5fd; }
+    .a-badge.green  { background:rgba(34,197,94,0.15); color:#86efac; }
+    .a-time         { font-size:11px; color:rgba(255,255,255,0.3); margin-left:auto; }
+
+    /* Action checklist */
+    .checklist-card { padding:28px; border-radius:var(--radius-lg); backdrop-filter:blur(16px);
+      background:var(--glass-bg); border:1px solid var(--glass-border); margin-bottom:24px; }
+    .chk-item { display:flex; align-items:flex-start; gap:12px; padding:12px 0;
+      border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+    .chk-item:last-child { border-bottom:none; }
+    .chk-box { width:20px; height:20px; border-radius:4px; border:2px solid rgba(255,255,255,0.2);
+      flex-shrink:0; transition:var(--transition); display:flex; align-items:center; justify-content:center; }
+    .chk-box.checked { background:var(--accent-2); border-color:var(--accent-2); }
+    .chk-text { font-size:14px; color:var(--text-secondary); }
+    .chk-text.done { text-decoration:line-through; color:rgba(255,255,255,0.25); }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+      <div class="bg-animated"></div>
+  <div class="particles" id="particles"></div>
+
+  <header class="site-header">
+    <a href="index.html" class="brand">
+      <span class="brand-icon">AG</span>
+      <div>
+        <div class="brand-name">AgriAdvisor</div>
+        <div class="brand-sub">Weather Alerts</div>
+      </div>
+    </a>
+    <nav>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+    </nav>
+  </header>
+
+  <div class="page-wrapper">
+    <div class="page-hero anim-fade-up">
+      <span class="ph-icon">WX</span>
+      <h1>Weather & Farming Alerts</h1>
+      <p>Stay ahead of weather events that affect your crops - <span id="alertCount" style="color:var(--accent-red);font-weight:700"></span></p>
+    </div>
+
+    <!-- Critical Banner -->
+    <div class="critical-banner anim-fade-up delay-1" id="criticalBanner">
+      <div class="critical-icon" id="criticalIcon">WX</div>
+      <div class="critical-text">
+        <h3 id="criticalTitle">Loading live weather...</h3>
+        <p id="criticalDesc">Fetching forecast from OpenWeatherMap.</p>
+      </div>
+    </div>
+
+    <!-- 7-day Forecast -->
+    <div class="section-title anim-fade-up delay-1">7-Day Forecast</div>
+    <p class="section-subtitle anim-fade-up" id="forecastLocation">Loading location...</p>
+    <div class="forecast-strip anim-fade-up delay-2" id="forecastStrip"></div>
+
+    <!-- Alerts List -->
+    <div class="section-title anim-fade-up delay-2">Active Alerts</div>
+    <p class="section-subtitle anim-fade-up">Click on an alert to mark as read</p>
+    <div id="alertsList"></div>
+
+    <!-- Action Checklist -->
+    <div class="checklist-card anim-fade-up delay-3">
+      <div class="section-title">Farmer Action Checklist</div>
+      <p class="section-subtitle">Steps to safeguard your farm during active alerts</p>
+      <div id="chkList"></div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+  </div>
+
+  <script src="js/api-service.js"></script>
+  <script>
+    const pc=document.getElementById('particles');
+    for(let i=0;i<12;i++){
+      const p=document.createElement('div'); p.className='particle';
+      const s=Math.random()*5+2;
+      p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*12}s;`;
+      pc.appendChild(p);
+    }
+
+    function getStoredUser() {
+      try {
+        const raw = localStorage.getItem('user');
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function formatDay(dateStr, index) {
+      const date = new Date(dateStr);
+      if (index === 0) return 'Today';
+      if (index === 1) return 'Tomorrow';
+      return date.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase();
+    }
+
+    function weatherLabel(code, label) {
+      if (label) return label;
+      return 'Weather';
+    }
+
+    function weatherTone(day) {
+      const rain = Number(day.rainProb || 0);
+      const max = Number(day.tempMax || 0);
+      const min = Number(day.tempMin || 0);
+      if (rain >= 70) return 'critical';
+      if (max >= 40 || min >= 32) return 'warning';
+      if (rain >= 40) return 'info';
+      return 'good';
+    }
+
+    function buildAlerts(weather) {
+      const current = weather.current || {};
+      const daily = Array.isArray(weather.daily) ? weather.daily : [];
+      const alerts = [];
+
+      const maxRain = Math.max(...daily.map(day => Number(day.rainProb || 0)), Number(current.rainProbability || 0), 0);
+      const maxTemp = Math.max(...daily.map(day => Number(day.tempMax || 0)), Number(current.temperature || 0), 0);
+      const maxWind = Math.max(Number(current.windSpeed || 0), ...daily.map(day => Number(day.windSpeed || 0)));
+
+      if (maxRain >= 70) {
+        alerts.push({
+          type: 'critical',
+          icon: 'RN',
+          title: 'Heavy Rain Alert - High rain probability in forecast',
+          desc: `The live forecast shows a strong chance of rain. Keep drainage open, pause spraying, and protect stored grain.`,
+          badges: [{ c: 'red', t: 'Critical' }, { c: 'yellow', t: `${Math.round(maxRain)}% rain` }],
+          time: 'Live forecast',
+        });
+      }
+
+      if (maxTemp >= 40) {
+        alerts.push({
+          type: 'warning',
+          icon: 'HT',
+          title: 'Heatwave Alert - Very high temperatures expected',
+          desc: `Forecast temperatures may reach around ${Math.round(maxTemp)} C. Irrigate early morning or late evening and reduce field stress.`,
+          badges: [{ c: 'yellow', t: 'Warning' }, { c: 'blue', t: `${Math.round(maxTemp)} C` }],
+          time: 'Live forecast',
+        });
+      }
+
+      if (maxWind >= 35) {
+        alerts.push({
+          type: 'info',
+          icon: 'WD',
+          title: 'Strong Wind Alert - Crop lodging risk',
+          desc: `Wind speeds are trending near ${Math.round(maxWind)} km/h. Secure tall crops and lightweight farm structures.`,
+          badges: [{ c: 'blue', t: 'Wind' }, { c: 'blue', t: `${Math.round(maxWind)} km/h` }],
+          time: 'Live forecast',
+        });
+      }
+
+      const next48 = daily.slice(0, 2);
+      if (next48.length && next48.every(day => Number(day.rainProb || 0) < 20) && maxTemp >= 32) {
+        alerts.push({
+          type: 'good',
+          icon: 'IR',
+          title: 'Irrigation Window - Dry and warm conditions ahead',
+          desc: 'The next two days look mostly dry with warm temperatures. This is a good time to plan irrigation and field work.',
+          badges: [{ c: 'green', t: 'Opportunity' }, { c: 'green', t: 'Next 48 hrs' }],
+          time: 'Live forecast',
+        });
+      }
+
+      if (alerts.length === 0) {
+        alerts.push({
+          type: 'good',
+          icon: 'OK',
+          title: 'No major weather threats detected',
+          desc: 'The current forecast does not show any major weather risk. Keep checking for changes before field operations.',
+          badges: [{ c: 'green', t: 'Clear' }],
+          time: 'Live forecast',
+        });
+      }
+
+      return alerts;
+    }
+
+    function renderChecklist(alerts) {
+      const items = [];
+      if (alerts.some(a => a.type === 'critical')) {
+        items.push('Clear drainage channels before rainfall');
+        items.push('Delay pesticide and fertilizer spraying');
+        items.push('Move equipment and grain to covered storage');
+      }
+      if (alerts.some(a => a.type === 'warning')) {
+        items.push('Irrigate during cooler hours');
+        items.push('Watch crops for heat stress');
+      }
+      if (alerts.some(a => a.type === 'info')) {
+        items.push('Support tall crops and tie loose bundles');
+        items.push('Secure lightweight structures');
+      }
+      if (alerts.every(a => a.type !== 'critical' && a.type !== 'warning')) {
+        items.push('Use this window for sowing, spraying, or field inspection');
+      }
+
+      document.getElementById('chkList').innerHTML = items.map((t, i) => `
+        <div class="chk-item" onclick="toggleCheck(this)">
+          <div class="chk-box" id="chk-${i}"></div>
+          <div class="chk-text" id="chkt-${i}">${t}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderForecast(weather) {
+      const daily = Array.isArray(weather.daily) ? weather.daily : [];
+      document.getElementById('forecastLocation').textContent = `${weather.location?.name || 'Your location'}${weather.location?.state ? ', ' + weather.location.state : ''}`;
+      document.getElementById('forecastStrip').innerHTML = daily.map((day, i) => `
+        <div class="fc-day ${i===0?'today':''}">
+          <div class="fc-day-name">${formatDay(day.date, i)}</div>
+          <div class="fc-icon">${day.icon || 'WX'}</div>
+          <div class="fc-temp">${Math.round(Number(day.tempMax ?? day.tempMin ?? 0))} C</div>
+          <div class="fc-rain">${Math.round(Number(day.rainProb || 0))}% rain</div>
+          <div class="fc-label">${weatherLabel(day.code, day.label)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderAlerts(weather) {
+      const alerts = buildAlerts(weather);
+      document.getElementById('alertCount').textContent = `${alerts.filter(a => a.type !== 'good').length} critical/warning alerts`;
+      document.getElementById('criticalBanner').className = 'critical-banner anim-fade-up delay-1' + (alerts[0]?.type === 'critical' ? '' : '');
+      document.getElementById('criticalIcon').textContent = weather.current?.icon || 'WX';
+      document.getElementById('criticalTitle').textContent = alerts[0]?.title || 'Live weather loaded';
+      document.getElementById('criticalDesc').textContent = alerts[0]?.desc || 'Current conditions are being monitored in real time.';
+
+      document.getElementById('alertsList').innerHTML = alerts.map((a, i) => `
+        <div class="alert-card ${a.type} anim-fade-up delay-${i+1}" id="alert-${i}">
+          <div class="a-icon">${a.icon}</div>
+          <div class="a-body">
+            <div class="a-title">${a.title}</div>
+            <div class="a-desc">${a.desc}</div>
+            <div class="a-meta">
+              ${a.badges.map(b => `<span class="a-badge ${b.c}">${b.t}</span>`).join('')}
+              <span class="a-time">${a.time}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      renderChecklist(alerts);
+    }
+
+    async function loadWeatherAlerts() {
+      const user = getStoredUser();
+      const defaultLocation = user?.location || 'Rohtak, Haryana';
+      try {
+        const weather = await APIService.getWeather(defaultLocation);
+        renderForecast(weather);
+        renderAlerts(weather);
+      } catch (error) {
+        document.getElementById('forecastStrip').innerHTML = '<div class="fc-day today"><div class="fc-day-name">Error</div><div class="fc-icon">WX</div><div class="fc-temp">--</div><div class="fc-rain">No live data</div></div>';
+        document.getElementById('alertsList').innerHTML = '<div class="alert-card warning"><div class="a-icon">WX</div><div class="a-body"><div class="a-title">Unable to load live weather</div><div class="a-desc">Please make sure the backend server is running and the OpenWeatherMap key is configured.</div></div></div>';
+        document.getElementById('criticalTitle').textContent = 'Live weather unavailable';
+        document.getElementById('criticalDesc').textContent = 'The app could not fetch weather data from the backend right now.';
+        document.getElementById('forecastLocation').textContent = defaultLocation;
+        document.getElementById('alertCount').textContent = '0 critical/warning alerts';
+        document.getElementById('chkList').innerHTML = '<div class="chk-item"><div class="chk-box"></div><div class="chk-text">No live checklist available until weather data loads.</div></div>';
+      }
+    }
+
+    function toggleCheck(el) {
+      const box = el.querySelector('.chk-box');
+      const txt = el.querySelector('.chk-text');
+      box.classList.toggle('checked');
+      txt.classList.toggle('done');
+      if(box.classList.contains('checked')) box.innerHTML='OK';
+      else box.innerHTML='';
+    }
+
+    loadWeatherAlerts();
+  </script>
+      </main>
+    </div>
+  </div>
+  <div class="toast-root"></div>
+  <script src="js/shared-nav.js"></script>
+  <script>initNav('alerts','Weather Alerts','Active farm alerts');</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell Crops — AgriAdvisor</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── Listing Card ── */
+    .listing-card {
+      background:var(--c-bg-card); border:1px solid var(--c-border);
+      border-radius:var(--r-lg); backdrop-filter:blur(16px);
+      overflow:hidden; transition:all var(--t-base); position:relative;
+    }
+    .listing-card:hover { transform:translateY(-4px); border-color:var(--c-border-hover);
+      box-shadow:var(--shadow-md),var(--glow-green); }
+    .listing-img {
+      height:130px; display:flex; align-items:center; justify-content:center;
+      font-size:60px; border-bottom:1px solid var(--c-border-subtle);
+      background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(21,128,61,0.04));
+    }
+    .listing-body { padding:16px; }
+    .listing-name { font-size:15px; font-weight:700; color:var(--c-text-1); margin-bottom:4px; }
+    .listing-price{ font-size:20px; font-weight:800; color:var(--c-green-1); margin-bottom:8px; }
+    .listing-meta { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+    .listing-meta .lm { font-size:12px; color:var(--c-text-mute); display:flex; gap:6px; }
+    .listing-meta .lm strong { color:var(--c-text-2); }
+    .listing-actions { display:flex; gap:8px; }
+    .listing-status {
+      position:absolute; top:12px; right:12px;
+    }
+
+    /* ── Add Form ── */
+    .add-form-card { padding:28px; border-radius:var(--r-xl); background:var(--c-bg-card);
+      border:1px solid var(--c-border); backdrop-filter:blur(16px); margin-bottom:24px; }
+    .crop-icons-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:4px; }
+    .crop-icon-btn {
+      aspect-ratio:1; border-radius:var(--r-sm); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:2px; cursor:pointer;
+      background:rgba(255,255,255,0.04); border:1px solid var(--c-border-subtle);
+      transition:all var(--t-fast); font-size:22px;
+    }
+    .crop-icon-btn span { font-size:9px; color:var(--c-text-mute); font-weight:500; }
+    .crop-icon-btn:hover { background:rgba(34,197,94,0.08); border-color:var(--c-border); }
+    .crop-icon-btn.selected { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.4);
+      box-shadow:0 0 12px rgba(34,197,94,0.15); }
+
+    /* ── Stats Bar ── */
+    .sell-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:24px; }
+    .sell-stat { padding:16px; border-radius:var(--r-md); background:var(--c-bg-card);
+      border:1px solid var(--c-border); text-align:center; backdrop-filter:blur(12px); }
+    .sell-stat .v { font-size:22px; font-weight:800; color:var(--c-green-1); }
+    .sell-stat .l { font-size:11px; color:var(--c-text-mute); margin-top:3px; }
+
+    /* ── Listings Grid ── */
+    .listings-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; }
+
+    /* ── Tips Sidebar ── */
+    .tip-item { display:flex; gap:10px; padding:12px 0; border-bottom:1px solid var(--c-border-subtle); }
+    .tip-item:last-child { border-bottom:none; }
+    .tip-icon { font-size:20px; flex-shrink:0; }
+    .tip-content h5 { font-size:13px; font-weight:600; color:var(--c-text-1); margin-bottom:3px; }
+    .tip-content p  { font-size:12px; color:var(--c-text-mute); line-height:1.5; }
+
+    .price-suggestion {
+      display:flex; align-items:center; gap:10px; padding:12px 14px;
+      border-radius:var(--r-md); margin-top:8px;
+      background:rgba(34,197,94,0.07); border:1px solid rgba(34,197,94,0.15);
+    }
+    .ps-icon { font-size:20px; }
+    .ps-text { font-size:12px; color:var(--c-text-mute); }
+    .ps-text strong { color:var(--c-green-1); }
+
+    /* Two-pane layout */
+    .sell-layout { display:grid; grid-template-columns:1fr 300px; gap:20px; }
+    @media(max-width:900px){ .sell-layout{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="bg-ambient"></div>
+  <div class="particles"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar"></aside>
+    <div class="main-content">
+      <div class="top-bar"></div>
+      <main class="page">
+
+        <div class="page-header">
+          <div class="page-title afu">🌿 Sell Your Crops</div>
+          <div class="page-sub afu d1">List crops on the marketplace and connect with buyers directly</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="sell-stats afu d1">
+          <div class="sell-stat"><div class="v">3</div><div class="l">Active Listings</div></div>
+          <div class="sell-stat"><div class="v">12</div><div class="l">Total Sales</div></div>
+          <div class="sell-stat"><div class="v">₹84,500</div><div class="l">Total Revenue</div></div>
+          <div class="sell-stat"><div class="v">47</div><div class="l">Buyer Inquiries</div></div>
+          <div class="sell-stat"><div class="v">4.8 ⭐</div><div class="l">Seller Rating</div></div>
+        </div>
+
+        <div class="sell-layout">
+          <!-- Left: Form + Listings -->
+          <div>
+            <!-- Add Listing Form -->
+            <div class="add-form-card afu d2">
+              <div class="section-heading mb-4">➕ Add New Crop Listing</div>
+              <div class="section-sub">Fill in the details to list your crop on the marketplace</div>
+
+              <div class="form-group">
+                <div class="form-label">Select Crop Type</div>
+                <div class="crop-icons-grid" id="cropIconGrid"></div>
+                <input type="hidden" id="selectedCrop" value="wheat">
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Crop Name</label>
+                  <input type="text" class="form-input" id="cropName" placeholder="e.g. Wheat (HD-2967)" value="Wheat (HD-2967)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Variety / Grade</label>
+                  <input type="text" class="form-input" id="cropGrade" placeholder="e.g. Grade A — FAQ">
+                </div>
+              </div>
+
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Quantity Available</label>
+                  <div class="input-icon-wrap">
+                    <span class="i-icon">⚖️</span>
+                    <input type="number" class="form-input" id="quantity" placeholder="e.g. 50" min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Unit</label>
+                  <select class="form-select" id="unit">
+                    <option value="quintal">Quintal (100kg)</option>
+                    <option value="kg">Kilogram (kg)</option>
+                    <option value="tonne">Tonne (MT)</option>
+                    <option value="bag">Bag (50kg)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Price per Unit (₹)</label>
+                  <div class="input-icon-wrap">
+                    <span class="i-icon">₹</span>
+                    <input type="number" class="form-input" id="price" placeholder="e.g. 2100" oninput="suggestPrice(this.value)" min="1">
+                  </div>
+                </div>
+              </div>
+
+              <div id="priceSuggestion" style="display:none;">
+                <div class="price-suggestion">
+                  <span class="ps-icon">🤖</span>
+                  <div class="ps-text"><strong>AI Price Check:</strong> <span id="priceMsg"></span></div>
+                </div>
+              </div>
+
+              <div class="form-grid-2 mt-12">
+                <div class="form-group">
+                  <label class="form-label">Harvest Date</label>
+                  <input type="date" class="form-input" id="harvestDate">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Available Until</label>
+                  <input type="date" class="form-input" id="availUntil">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Farm Location</label>
+                <div class="input-icon-wrap">
+                  <span class="i-icon">📍</span>
+                  <input type="text" class="form-input" id="farmLoc" placeholder="Village, Tehsil, District" value="Rohtak, Haryana">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Additional Details</label>
+                <textarea class="form-textarea" id="details" rows="3" placeholder="Storage conditions, quality grade, moisture content, transport available, etc."></textarea>
+              </div>
+
+              <div class="flex gap-10 mt-16" style="flex-wrap:wrap;">
+                <button class="btn btn-primary btn-lg" onclick="addListing()" id="addBtn">
+                  🌿 Publish Listing
+                </button>
+                <button class="btn btn-secondary" onclick="clearForm()">🗑 Clear</button>
+              </div>
+            </div>
+
+            <!-- My Listings -->
+            <div class="section-heading afu">📦 My Active Listings</div>
+            <div class="section-sub afu">Buyers can view these on the Marketplace</div>
+            <div class="listings-grid afu d2" id="listingsGrid"></div>
+          </div>
+
+          <!-- Right Sidebar: Tips + Market -->
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="card card-pad afu d3">
+              <div class="card-title mb-16">📊 Current Market Rates</div>
+              <table class="data-table" id="marketTable"></table>
+              <div style="margin-top:12px;">
+                <a href="market-prices.html" class="btn btn-secondary btn-sm btn-full">View All Prices →</a>
+              </div>
+            </div>
+
+            <div class="card card-pad afu d4">
+              <div class="card-title mb-16">💡 Selling Tips</div>
+              <div id="sellingTips"></div>
+            </div>
+
+            <div class="card card-pad afu d5" style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(217,119,6,0.05));border-color:rgba(245,158,11,0.2);">
+              <div style="font-size:22px;margin-bottom:12px;">🏆</div>
+              <div style="font-size:15px;font-weight:700;color:var(--c-text-1);margin-bottom:6px;">Verified Seller Badge</div>
+              <div style="font-size:12px;color:var(--c-text-mute);line-height:1.6;margin-bottom:14px;">Complete 10 successful transactions to unlock your Premium Seller Badge and get priority marketplace placement.</div>
+              <div class="progress mb-8">
+                <div class="progress-fill gold" style="width:0%" data-w="80%"></div>
+              </div>
+              <div style="font-size:11px;color:var(--c-text-mute);">8/10 transactions completed</div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-root"></div>
+  <script src="js/api-service.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shared-nav.js"></script>
+  <script>
+    initNav('sell-crops','Sell Your Crops','List crops and connect with buyers');
+    
+    // Auth Check
+    const token = checkAuth();
+    let currentUserName = "Farmer";
+
+    const CROP_ICONS=[
+      {e:'🌾',n:'Wheat',k:'wheat',p:2100},
+      {e:'🌾',n:'Rice',k:'rice',p:2500},
+      {e:'🌽',n:'Maize',k:'maize',p:1800},
+      {e:'🌱',n:'Cotton',k:'cotton',p:6200},
+      {e:'🌼',n:'Mustard',k:'mustard',p:5100},
+      {e:'🫘',n:'Soybean',k:'soybean',p:3900},
+      {e:'🧅',n:'Onion',k:'onion',p:2800},
+      {e:'🥔',n:'Potato',k:'potato',p:1200},
+      {e:'🍅',n:'Tomato',k:'tomato',p:1800},
+      {e:'🌿',n:'Sugarcane',k:'sugarcane',p:320},
+      {e:'🫘',n:'Chana',k:'chana',p:5200},
+      {e:'🌻',n:'Sunflower',k:'sunflower',p:4800},
+    ];
+
+    let selectedCropPrice=2100;
+
+    document.getElementById('cropIconGrid').innerHTML=CROP_ICONS.map((c,i)=>`
+      <div class="crop-icon-btn ${i===0?'selected':''}" onclick="pickCrop(this,'${c.k}',${c.p},'${c.n}','${c.e}')" data-key="${c.k}">
+        ${c.e}<span>${c.n}</span>
+      </div>`).join('');
+
+    function pickCrop(el,key,price,name,emoji){
+      document.querySelectorAll('.crop-icon-btn').forEach(b=>b.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('selectedCrop').value=key;
+      document.getElementById('cropName').value=name;
+      selectedCropPrice=price;
+      const priceInput=document.getElementById('price');
+      if(!priceInput.value) priceInput.value=price;
+      else suggestPrice(priceInput.value);
+    }
+
+    function suggestPrice(val){
+      const v=parseInt(val)||0;
+      const el=document.getElementById('priceSuggestion');
+      const msg=document.getElementById('priceMsg');
+      if(!v){el.style.display='none';return;}
+      el.style.display='block';
+      const diff=v-selectedCropPrice;
+      if(Math.abs(diff)<100) msg.innerHTML=`₹${val} is <strong>aligned</strong> with today's market rate of ₹${selectedCropPrice}/qtl. Good pricing!`;
+      else if(diff>0) msg.innerHTML=`₹${val} is <strong>₹${diff} above</strong> market rate (₹${selectedCropPrice}). May deter buyers — consider adjusting.`;
+      else msg.innerHTML=`₹${val} is <strong>₹${Math.abs(diff)} below</strong> market rate (₹${selectedCropPrice}). You'll sell fast but earnings may be lower.`;
+    }
+
+    // Fetch My Listings from API
+    let listings = [];
+    
+    async function loadMyListings() {
+      try {
+        listings = await APIService.getMyInventory();
+        renderListings();
+      } catch (err) {
+        console.error('Error loading listings:', err);
+        showToast('Error', 'Failed to load listings', 'error');
+      }
+    }
+
+    function renderListings(){
+      if(!listings || listings.length === 0) {
+        document.getElementById('listingsGrid').innerHTML = '<div style="color:var(--c-text-mute); grid-column:1/-1;">No crops listed yet. <a href="javascript:void(0)" onclick="window.scrollTo({top:0});" style="color:var(--c-green-1);">Add one now</a></div>';
+        return;
+      }
+      
+      document.getElementById('listingsGrid').innerHTML=listings.map((l,i)=>`
+        <div class="listing-card">
+          <div class="listing-status"><span class="badge ${l.status==='Active'?'badge-green':(l.status==='Pending'?'badge-gold':'badge-muted')}">${l.status}</span></div>
+          <div class="listing-img">🌱</div>
+          <div class="listing-body">
+            <div class="listing-name">${l.cropName}</div>
+            <div class="listing-price">₹${l.price.toLocaleString()}<span style="font-size:13px;font-weight:400;color:var(--c-text-mute)">/qtl</span></div>
+            <div class="listing-meta">
+              <div class="lm">⚖️ <strong>Qty:</strong> ${l.quantity} qtl available</div>
+              <div class="lm">🏅 <strong>Grade:</strong> ${l.grade || 'Standard'}</div>
+              <div class="lm">📍 <strong>${l.location}</strong></div>
+            </div>
+            <div class="listing-actions">
+              <button class="btn btn-secondary btn-sm" style="flex:1" onclick="editListing('${l._id}')">✏ Edit</button>
+              <button class="btn btn-danger btn-sm" style="flex:1" onclick="removeListing('${l._id}')">🗑 Remove</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+    
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await fetchCurrentUser();
+      if(user) { currentUserName = user.name; }
+      loadMyListings();
+    });
+
+    async function addListing(){
+      const cropName=document.getElementById('cropName').value.trim();
+      const quantity=document.getElementById('quantity').value;
+      const price=document.getElementById('price').value;
+      const grade=document.getElementById('cropGrade').value||'Standard';
+
+      if(!cropName||!quantity||!price){
+        showToast('Missing fields','Please fill Crop name, quantity and price','error');
+        return;
+      }
+
+      const btn=document.getElementById('addBtn');
+      btn.innerHTML='<div class="spinner spinner-sm" style="margin:0"></div> Publishing...';
+      btn.disabled=true;
+
+      try {
+        await APIService.addCrop({ cropName, quantity: Number(quantity), price: Number(price), grade });
+        await loadMyListings(); // Refresh listings
+        showToast('🎉 Listing Published!',`${cropName} is now live on the Marketplace`,'success');
+        clearForm();
+      } catch (err) {
+        console.error(err);
+        showToast('Error', err.message || 'Failed to publish crop.', 'error');
+      }
+
+      btn.innerHTML='🌿 Publish Listing'; btn.disabled=false;
+    }
+
+    async function removeListing(cropId){
+      if(!confirm('Remove this listing?')) return;
+      
+      try {
+        await APIService.deleteCrop(cropId);
+        await loadMyListings();
+        showToast('Listing removed','Crop removed from marketplace','warning');
+      } catch (err) {
+        console.error(err);
+        showToast('Error', 'Failed to remove listing', 'error');
+      }
+    }
+
+    function editListing(cropId){
+      const crop = listings.find(l => l._id === cropId);
+      if(crop) {
+        document.getElementById('cropName').value = crop.cropName;
+        document.getElementById('quantity').value = crop.quantity;
+        document.getElementById('price').value = crop.price;
+        document.getElementById('cropGrade').value = crop.grade || 'Standard';
+        document.getElementById('farmLoc').value = crop.location || '';
+        window.scrollTo({top:0,behavior:'smooth'});
+        showToast('Editing listing','Update the fields and republish','info');
+      }
+    }
+
+    function clearForm(){
+      ['cropName','cropGrade','quantity','price','details','harvestDate','availUntil'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('priceSuggestion').style.display='none';
+    }
+
+    // Market Table
+    const marketData=[['🌾','Wheat','₹2,100','▲+80'],['🌾','Rice','₹2,500','▲+50'],['🌽','Maize','₹1,800','▲+30'],['🌼','Mustard','₹5,100','▼-80'],['🧅','Onion','₹2,800','▼-200']];
+    document.getElementById('marketTable').innerHTML=`<thead><tr><th>Crop</th><th>Rate</th><th>Chg</th></tr></thead><tbody>${marketData.map(r=>`<tr><td>${r[0]} ${r[1]}</td><td style="font-weight:700">${r[2]}</td><td style="font-size:11px;color:${r[3].includes('▲')?'var(--c-green-1)':'var(--c-red)'}">${r[3]}</td></tr>`).join('')}</tbody>`;
+
+    // Selling Tips
+    const tips=[
+      {icon:'📸',title:'Add Photos',desc:'Listings with crop photos get 3x more buyer inquiries.'},
+      {icon:'⭐',title:'Price Right',desc:'Pricing within ₹100 of market rate sells 2x faster.'},
+      {icon:'📊',title:'Sell in Bulk',desc:'Offer bulk discounts to attract large traders and FPOs.'},
+      {icon:'📅',title:'List Early',desc:'Publish listings 2–3 weeks before harvest for best results.'},
+    ];
+    document.getElementById('sellingTips').innerHTML=tips.map(t=>`
+      <div class="tip-item"><span class="tip-icon">${t.icon}</span>
+      <div class="tip-content"><h5>${t.title}</h5><p>${t.desc}</p></div></div>`).join('');
+
+    setTimeout(()=>{
+      document.querySelectorAll('[data-w]').forEach(el=>el.style.width=el.dataset.w);
+    },600);
+  </script>
+</body>
+</html>

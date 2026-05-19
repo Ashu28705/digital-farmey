@@ -1,0 +1,759 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AgriAdvisor - AI-powered Digital Farming Platform.">
+  <title>AgriAdvisor - Digital Farming Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    :root {
+      --glass-strong: rgba(4, 13, 8, 0.62);
+      --glass-soft: rgba(255, 255, 255, 0.05);
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --text-dim: rgba(255, 255, 255, 0.66);
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: #020905;
+    }
+
+    .video-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.12), transparent 40%), #020905;
+    }
+    .video-bg video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.42;
+      filter: saturate(1.15) contrast(1.05) brightness(0.72);
+      transform: scale(1.04);
+    }
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(2, 9, 5, 0.28) 0%, rgba(2, 9, 5, 0.82) 54%, rgba(2, 9, 5, 0.96) 100%),
+        radial-gradient(circle at 50% 20%, rgba(34, 197, 94, 0.14), transparent 36%);
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+    }
+
+    .land-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 0 28px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(4, 18, 10, 0.92), rgba(3, 13, 7, 0.78));
+      backdrop-filter: blur(22px) saturate(185%);
+      border-bottom: 1px solid rgba(34, 197, 94, 0.16);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #16a34a, #22c55e 45%, #86efac);
+      color: #03110a;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: 0 12px 28px rgba(34, 197, 94, 0.28);
+      flex-shrink: 0;
+    }
+    .brand-copy {
+      min-width: 0;
+    }
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #f7fff9;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.72);
+    }
+    .land-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .land-link {
+      padding: 10px 16px;
+      border-radius: var(--r-pill);
+      font-size: 13px;
+      color: #edfdf2;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.18);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+    }
+    .land-link:hover {
+      color: var(--c-text-1);
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(74, 222, 128, 0.42);
+      box-shadow: 0 14px 28px rgba(34, 197, 94, 0.18), 0 0 0 1px rgba(74, 222, 128, 0.08) inset;
+    }
+    .land-link:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .land-nav .btn {
+      border-width: 1px;
+      min-height: 38px;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .land-nav .btn.btn-secondary {
+      background: rgba(7, 20, 12, 0.92);
+      color: #f0fdf4;
+      border-color: rgba(74, 222, 128, 0.26);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    }
+    .land-nav .btn.btn-primary {
+      color: #03110a;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 14px 32px rgba(34, 197, 94, 0.42);
+    }
+    .land-nav .btn.btn-secondary:hover {
+      border-color: rgba(74, 222, 128, 0.42);
+      background: rgba(12, 26, 16, 0.96);
+      box-shadow: 0 16px 28px rgba(34, 197, 94, 0.18);
+    }
+    .land-nav .btn.btn-primary:hover {
+      box-shadow: 0 18px 36px rgba(34, 197, 94, 0.5);
+      filter: brightness(1.03);
+    }
+
+    .hero {
+      min-height: calc(100vh - 72px);
+      padding: 48px 24px 72px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .hero-shell {
+      width: min(1200px, 100%);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .hero-copy,
+    .hero-panel {
+      position: relative;
+    }
+    .hero-copy {
+      padding: 18px 0;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: var(--r-pill);
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.22);
+      color: #b7f7ca;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      letter-spacing: 0.04em;
+    }
+    .hero-badge i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
+      display: inline-block;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(40px, 6vw, 78px);
+      line-height: 0.98;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #f3fff7;
+      text-wrap: balance;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #dfffe8 0%, #86efac 35%, #22c55e 70%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      margin-top: 18px;
+      max-width: 620px;
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-dim);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .hero-meta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--r-pill);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--c-text-1);
+      font-size: 13px;
+      backdrop-filter: blur(14px);
+    }
+    .meta-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+    }
+
+    .hero-panel {
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(8, 22, 14, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+      transform-style: preserve-3d;
+    }
+    .panel-top {
+      padding: 20px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--r-pill);
+      background: rgba(34, 197, 94, 0.08);
+      color: #b7f7ca;
+      border: 1px solid rgba(34, 197, 94, 0.14);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .video-pill {
+      padding: 8px 12px;
+      border-radius: var(--r-pill);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .drone-frame {
+      margin: 16px 20px 20px;
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      min-height: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(59, 130, 246, 0.05));
+    }
+    .drone-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(2, 9, 5, 0.28) 55%, rgba(2, 9, 5, 0.72) 100%);
+      pointer-events: none;
+    }
+    .drone-frame video {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+      display: block;
+      filter: saturate(1.1) contrast(1.05) brightness(0.9);
+      transform: scale(1.01);
+    }
+    .overlay-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mix-blend-mode: soft-light;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+    .floating-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 0 20px 20px;
+      margin-top: -4px;
+    }
+    .mini-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: transform var(--t-base) var(--ease), border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+    }
+    .mini-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(34, 197, 94, 0.22);
+      background: rgba(34, 197, 94, 0.06);
+    }
+    .mini-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .mini-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--c-text-1);
+      line-height: 1.1;
+    }
+    .mini-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #b7f7ca;
+    }
+
+    .section {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 84px;
+      position: relative;
+      z-index: 2;
+    }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .section-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 900;
+      margin: 0;
+      color: var(--c-text-1);
+    }
+    .section-desc {
+      max-width: 620px;
+      margin: 8px 0 0;
+      color: var(--text-dim);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .feature-card {
+      grid-column: span 4;
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(10, 28, 18, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(18px);
+      transition: transform var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), transparent 55%);
+      opacity: 0;
+      transition: opacity var(--t-base) var(--ease);
+    }
+    .feature-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28), 0 0 34px rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.22);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.18);
+      color: #b7f7ca;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--c-text-1);
+    }
+    .feature-copy {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+    .feature-card.wide { grid-column: span 6; }
+
+    .marquee-wrap {
+      width: min(1200px, calc(100% - 32px));
+      margin: 28px auto 0;
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+    }
+    .marquee-inner {
+      display: flex;
+      gap: 12px;
+      white-space: nowrap;
+      animation: ticker 24s linear infinite;
+    }
+    .mq-chip {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .mq-chip strong { color: var(--c-green-1); }
+
+    .cta-row {
+      width: min(1200px, calc(100% - 32px));
+      margin: 20px auto 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .cta-card {
+      padding: 26px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(59, 130, 246, 0.07));
+      border: 1px solid rgba(34, 197, 94, 0.18);
+      backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .cta-copy {
+      max-width: 650px;
+    }
+    .cta-title {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .cta-desc {
+      color: var(--text-dim);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(34,197,94,0.08); top: -180px; left: -140px; }
+    .orb-2 { width: 420px; height: 420px; background: rgba(59,130,246,0.07); bottom: -120px; right: -120px; }
+
+    footer {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 26px 20px 34px;
+      color: var(--text-dim);
+      font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(2, 9, 5, 0.4);
+      backdrop-filter: blur(12px);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.18); opacity: 0.7; }
+    }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    @media (max-width: 1080px) {
+      .hero-shell { grid-template-columns: 1fr; }
+      .feature-card { grid-column: span 6; }
+    }
+    @media (max-width: 720px) {
+      .land-header {
+        padding: 10px 14px 12px;
+        height: auto;
+        min-height: 72px;
+        align-items: start;
+        gap: 10px;
+        background: rgba(3, 13, 7, 0.94);
+      }
+      .land-nav { justify-content: flex-start; }
+      .land-nav .btn,
+      .land-link {
+        background: rgba(7, 20, 12, 0.94);
+        border-color: rgba(74, 222, 128, 0.22);
+      }
+      .hero { padding: 22px 16px 52px; }
+      .hero-desc { font-size: 15px; }
+      .drone-frame, .drone-frame video { min-height: 300px; }
+      .feature-card, .feature-card.wide { grid-column: span 12; }
+      .floating-cards { grid-template-columns: 1fr; }
+      .cta-card { padding: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="video-bg" aria-hidden="true">
+    <video autoplay muted loop playsinline preload="auto" poster="">
+      <source src="farmlanddrone.mp4" type="video/mp4">
+    </video>
+    <div class="video-overlay"></div>
+  </div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="page-wrap">
+    <header class="land-header">
+      <a class="brand" href="#hero">
+        <div class="brand-mark">AG</div>
+        <div class="brand-copy">
+          <div class="brand-name">AgriAdvisor</div>
+          <div class="brand-sub">Digital Farming Platform</div>
+        </div>
+      </a>
+      <nav class="land-nav">
+        <a href="dashboard.html" class="land-link">Dashboard</a>
+        <a href="marketplace.html" class="land-link">Marketplace</a>
+        <a href="sell-crops.html" class="land-link">Sell Crops</a>
+        <a href="register.html" class="btn btn-secondary btn-sm">Register</a>
+        <a href="dashboard.html" class="btn btn-primary btn-sm">Login</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="hero">
+      <div class="hero-shell">
+        <div class="hero-copy">
+          <div class="hero-badge"><i></i> Live AI farming intelligence</div>
+          <h1>The future of farming is <span>digital</span></h1>
+          <p class="hero-desc">
+            Track crop health, monitor live weather, get smarter fertilizer guidance,
+            and sell produce with real market visibility - all in one modern platform.
+          </p>
+          <div class="hero-actions">
+            <a href="register.html" class="btn btn-primary btn-xl">Start for free</a>
+            <a href="dashboard.html" class="btn btn-secondary btn-xl">Open dashboard</a>
+            <button id="videoToggle" class="btn btn-ghost btn-xl" type="button">Pause video</button>
+          </div>
+          <div class="hero-meta">
+            <div class="meta-pill"><span class="meta-dot"></span> Live weather alerts</div>
+            <div class="meta-pill"><span class="meta-dot" style="background:#38bdf8"></span> Market price tracking</div>
+            <div class="meta-pill"><span class="meta-dot" style="background:#f59e0b"></span> AI recommendations</div>
+          </div>
+        </div>
+
+        <div class="hero-panel" id="heroPanel">
+          <div class="panel-top">
+            <div class="panel-tag">Drone view active</div>
+            <button class="video-pill" id="soundHint" type="button">Video background on</button>
+          </div>
+          <div class="drone-frame">
+            <video autoplay muted loop playsinline preload="auto">
+              <source src="farmlanddrone.mp4" type="video/mp4">
+            </video>
+            <div class="overlay-grid"></div>
+          </div>
+          <div class="floating-cards">
+            <div class="mini-card">
+              <div class="mini-label">Live field scan</div>
+              <div class="mini-value">92% coverage</div>
+              <div class="mini-sub">Drone passes and crop mapping</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">AI alert status</div>
+              <div class="mini-value">Weather sync</div>
+              <div class="mini-sub">Forecast-driven recommendations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee-wrap">
+      <div class="marquee-inner" id="marquee"></div>
+    </div>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Built for every stage of the farm cycle</div>
+          <p class="section-desc">
+            From soil reading to crop selling, every screen in AgriAdvisor is now designed to feel responsive,
+            data-driven, and ready for real farm operations.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card wide">
+          <div class="feature-icon">AI</div>
+          <div class="feature-title">Smart Crop Advisor</div>
+          <div class="feature-copy">Crop suggestions based on your soil, season, rainfall, temperature, and farm profile.</div>
+        </div>
+        <div class="feature-card wide">
+          <div class="feature-icon">NPK</div>
+          <div class="feature-title">Fertilizer Guidance</div>
+          <div class="feature-copy">Practical NPK dosing, split scheduling, and cost planning for the field conditions you actually entered.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">MK</div>
+          <div class="feature-title">Market Pulse</div>
+          <div class="feature-copy">Live market prices with trend-based alerts that help you decide when to hold or sell.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">WX</div>
+          <div class="feature-title">Weather Intelligence</div>
+          <div class="feature-copy">OpenWeather-backed alerts and forecast cards tied directly to your location.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">AI</div>
+          <div class="feature-title">Chatbot Assistant</div>
+          <div class="feature-copy">Ask real farming questions and get quick advice from the connected assistant layer.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">ME</div>
+          <div class="feature-title">Profile and Activity</div>
+          <div class="feature-copy">Your dashboard, notifications, and farm activity stay synced with backend data.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-row">
+      <div class="cta-card">
+        <div class="cta-copy">
+          <div class="cta-title">Ready to make the farm feel alive?</div>
+          <div class="cta-desc">The drone footage is now the visual background, and the interface responds with hover lift, motion, and live data style interactions.</div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="register.html" class="btn btn-primary btn-lg">Create account</a>
+          <a href="dashboard.html" class="btn btn-secondary btn-lg">See live dashboard</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>&copy; 2026 AgriAdvisor - Digital Farming Advisory & Marketplace Platform</p>
+    </footer>
+  </div>
+
+  <script>
+    const marqueeItems = [
+      'Live weather sync',
+      'Drone-guided field view',
+      'AI crop advisor',
+      'Market price alerts',
+      'Smart fertilizer plan',
+      'Notifications from alerts',
+      'OpenWeather data',
+      'Marketplace signals'
+    ];
+    const marquee = document.getElementById('marquee');
+    marquee.innerHTML = [...marqueeItems, ...marqueeItems].map(item => `<div class="mq-chip"><strong>${item.split(' ')[0]}</strong> ${item.split(' ').slice(1).join(' ')}</div>`).join('');
+
+    const heroPanel = document.getElementById('heroPanel');
+    const hero = document.getElementById('hero');
+
+    hero.addEventListener('mousemove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      hero.style.setProperty('--mx', x.toFixed(3));
+      hero.style.setProperty('--my', y.toFixed(3));
+      heroPanel.style.transform = `perspective(1200px) rotateY(${x * 5}deg) rotateX(${-y * 4}deg) translateY(-2px)`;
+    });
+    hero.addEventListener('mouseleave', () => {
+      heroPanel.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) translateY(0)';
+    });
+
+    const videoToggle = document.getElementById('videoToggle');
+    const bgVideo = document.querySelector('.video-bg video');
+    let paused = false;
+    videoToggle.addEventListener('click', () => {
+      paused = !paused;
+      if (paused) {
+        bgVideo.pause();
+        videoToggle.textContent = 'Play video';
+      } else {
+        bgVideo.play().catch(() => {});
+        videoToggle.textContent = 'Pause video';
+      }
+    });
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('in-view');
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.feature-card, .cta-card').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
