@@ -593,13 +593,13 @@ async function initDatabase() {
 
   const admin = adminConnection.promise();
   await admin.query(
-    `CREATE DATABASE IF NOT EXISTS \`${DB_CONFIG.database}\`
+    `CREATE DATABASE \`${DB_CONFIG.database}\`
      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
   );
   await admin.end();
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
       id INT AUTO_INCREMENT PRIMARY KEY,
       first_name VARCHAR(100) NOT NULL,
       last_name VARCHAR(100) DEFAULT '',
@@ -615,16 +615,16 @@ async function initDatabase() {
     )
   `);
 
-  await exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100) NULL`);
-  await exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100) NULL DEFAULT ''`);
-  await exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS crop VARCHAR(255) NULL`);
-  await exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS farm_size DECIMAL(10,2) NULL`);
+  await exec(`ALTER TABLE users ADD COLUMN first_name VARCHAR(100) NULL`);
+  await exec(`ALTER TABLE users ADD COLUMN last_name VARCHAR(100) NULL DEFAULT ''`);
+  await exec(`ALTER TABLE users ADD COLUMN crop VARCHAR(255) NULL`);
+  await exec(`ALTER TABLE users ADD COLUMN farm_size DECIMAL(10,2) NULL`);
   await exec(`ALTER TABLE users MODIFY COLUMN phone VARCHAR(20) NULL`);
   await exec(`ALTER TABLE users MODIFY COLUMN location VARCHAR(255) NULL`);
   await exec(`ALTER TABLE users MODIFY COLUMN role ENUM('farmer', 'buyer', 'expert') NOT NULL DEFAULT 'farmer'`);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS crop_inventory (
+    CREATE TABLE crop_inventory (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
       crop_name VARCHAR(255) NOT NULL,
@@ -638,7 +638,7 @@ async function initDatabase() {
   `);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS marketplace_listings (
+    CREATE TABLE marketplace_listings (
       id INT AUTO_INCREMENT PRIMARY KEY,
       inventory_id INT NOT NULL,
       seller_id INT NOT NULL,
@@ -650,7 +650,7 @@ async function initDatabase() {
   `);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS market_prices (
+    CREATE TABLE market_prices (
       id INT AUTO_INCREMENT PRIMARY KEY,
       crop_name VARCHAR(255) NOT NULL,
       category VARCHAR(50) NOT NULL,
@@ -664,7 +664,7 @@ async function initDatabase() {
   `);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS soil_health (
+    CREATE TABLE soil_health (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
       ph_level FLOAT,
@@ -678,7 +678,7 @@ async function initDatabase() {
   `);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS transactions (
+    CREATE TABLE transactions (
       id INT AUTO_INCREMENT PRIMARY KEY,
       listing_id INT NOT NULL,
       buyer_id INT NOT NULL,
@@ -694,7 +694,7 @@ async function initDatabase() {
   `);
 
   await exec(`
-    CREATE TABLE IF NOT EXISTS notifications_and_alerts (
+    CREATE TABLE notifications_and_alerts (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
       type ENUM('alert', 'notification', 'ai_recommendation') NOT NULL,
@@ -707,9 +707,9 @@ async function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
-  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN IF NOT EXISTS source_key VARCHAR(191) NULL`);
-  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN IF NOT EXISTS category VARCHAR(50) NULL`);
-  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN IF NOT EXISTS link_url VARCHAR(255) NULL`);
+  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN source_key VARCHAR(191) NULL`);
+  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN category VARCHAR(50) NULL`);
+  await exec(`ALTER TABLE notifications_and_alerts ADD COLUMN link_url VARCHAR(255) NULL`);
 
   await seedMarketPrices();
 }
