@@ -2,25 +2,24 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 require('dotenv').config();
+const connection = require('./db');
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_agriadvisor_key';
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || '';
+
 const DB_CONFIG = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'agriadvisor',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  namedPlaceholders: true,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 };
 
-let pool;
+const pool = connection.promise();
 
 app.use(cors());
 app.use(express.json());
@@ -585,22 +584,19 @@ async function seedMarketPrices() {
 }
 
 async function initDatabase() {
-  const adminPool = mysql.createPool({
+  const adminConnection = mysql.createConnection({
     host: DB_CONFIG.host,
     user: DB_CONFIG.user,
     password: DB_CONFIG.password,
-    waitForConnections: true,
-    connectionLimit: 1,
-    queueLimit: 0,
+    port: DB_CONFIG.port,
   });
 
-  await adminPool.query(
+  const admin = adminConnection.promise();
+  await admin.query(
     `CREATE DATABASE IF NOT EXISTS \`${DB_CONFIG.database}\`
      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
   );
-  await adminPool.end();
-
-  pool = mysql.createPool(DB_CONFIG);
+  await admin.end();
 
   await exec(`
     CREATE TABLE IF NOT EXISTS users (
