@@ -3,7 +3,7 @@
  * Handles all communication with the backend
  */
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = '/api';
 
 class APIService {
   // Store JWT token in localStorage
