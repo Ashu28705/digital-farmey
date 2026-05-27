@@ -6,6 +6,18 @@ const connection = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  connectTimeout: 60000
+});
+
+connection.connect((err) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+  } else {
+    console.log('MySQL Connected');
+  }
 });
 
 module.exports = connection;
